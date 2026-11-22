@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NSE Option Scanner</title>
+<style>
+:root{--bg:#0e1621;--card:#16212f;--line:#263648;--tx:#e8edf2;--mu:#8fa0b3;--ac:#f2b441;--acx:#241a02}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+header{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 8px}
+h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.2px}
+header p{margin:2px 0 0;color:var(--mu);font-size:13px}
+main{padding:0 12px calc(90px + env(safe-area-inset-bottom,0px))}
+section{display:none}section.on{display:block}
+.row{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.row::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--tx);font:inherit;font-size:14px}
+.chip.on{background:var(--ac);border-color:var(--ac);color:var(--acx);font-weight:700}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.pad{padding:12px 14px}
+.hint{color:var(--mu);font-size:13px;margin:0 0 10px}
+.find{display:flex;gap:8px;margin-bottom:8px}
+.find input{flex:1;min-width:0;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font:inherit;text-transform:uppercase}
+.find button{padding:0 18px;border:0;border-radius:10px;background:var(--ac);color:var(--acx);font:inherit;font-weight:700}
+ol{margin:6px 0 0;padding-left:20px}li{margin:5px 0}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:9}
+nav button{flex:1;padding:14px 4px;border:0;background:none;color:var(--mu);font:inherit;font-weight:600}
+nav button.on{color:var(--ac);box-shadow:inset 0 3px 0 var(--ac)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <h1>NSE Option Scanner</h1>
+  <p>Find breakout and trending stocks, then check them before you trade.</p>
+</header>
+<main>
+
+<section id="scan" class="on">
+  <div class="row" id="screens"></div>
+  <div class="row" id="cols"></div>
+  <div class="box" id="screener"></div>
+  <div class="box pad">
+    <b>Breakout check</b>
+    <ol>
+      <li>Pick stocks from Gainers or Volume with a big move.</li>
+      <li>Tap a stock name, then open Analyze.</li>
+      <li>Want 5m and 15m both on Buy or Strong buy.</li>
+      <li>Open Chart and look for a clean break of a recent high.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="analyze">
+  <form class="find" id="f"><input id="q" placeholder="Stock, e.g. RELIANCE" autocomplete="off" autocapitalize="characters"><button>Load</button></form>
+  <div class="row" id="syms"></div>
+  <div class="row" id="tfs"></div>
+  <div class="box" id="ta"></div>
+  <p class="hint">The dial combines moving averages and oscillators. Strong buy on several timeframes together suggests a trend with momentum.</p>
+</section>
+
+<section id="chart">
+  <div class="row" id="syms2"></div>
+  <div class="box" id="adv" style="height:560px"></div>
+</section>
+
+</main>
+<nav>
+  <button data-t="scan" class="on">Scan</button>
+  <button data-t="analyze">Analyze</button>
+  <button data-t="chart">Chart</button>
+</nav>
+
+<script>
+const $ = s => document.querySelector(s);
+const CDN = 'https://s3.tradingview.com/external-embedding/embed-widget-';
+const LIST = ['NIFTY','BANKNIFTY','SENSEX','RELIANCE','HDFCBANK','ICICIBANK','SBIN','AXISBANK','TCS','INFY','BAJFINANCE','LT','ITC','MARUTI','TATASTEEL','ADANIENT'];
+const SCREENS = [['Gainers','top_gainers'],['Volume','volume_leaders'],['Volatile','most_volatile'],['Losers','top_losers'],['Large caps','most_capitalized']];
+const COLS = [['Overview','overview'],['Performance','performance'],['Moving avg','moving_averages'],['Oscillators','oscillators']];
+const TFS = [['5 min','5m','5'],['15 min','15m','15'],['1 hour','1h','60'],['Daily','1D','D']];
+
+let st = {sym:'NIFTY', tf:1, screen:'top_gainers', col:'overview'};
+try { Object.assign(st, JSON.parse(localStorage.getItem('nse-scan') || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem('nse-scan', JSON.stringify(st)); } catch (e) {} };
+
+function widget(el, name, cfg) {
+  el.innerHTML = '';
+  const w = document.createElement('div');
+  w.className = 'tradingview-widget-container';
+  w.style.height = '100%';
+  const i = document.createElement('div');
+  i.className = 'tradingview-widget-container__widget';
+  i.style.height = '100%';
+  w.appendChild(i);
+  const s = document.createElement('script');
+  s.src = CDN + name + '.js';
+  s.async = true;
+  s.textContent = JSON.stringify(cfg);
+  w.appendChild(s);
+  el.appendChild(w);
+}
+
+function full(sym) {
+  sym = sym.trim().toUpperCase();
+  if (sym.includes(':')) return sym;
+  if (sym === 'SENSEX') return 'BSE:SENSEX';
+  return 'NSE:' + sym;
+}
+
+function chips(el, items, isOn, onTap) {
+  el.innerHTML = '';
+  items.forEach((it, idx) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip' + (isOn(it, idx) ? ' on' : '');
+    b.textContent = it[0] || it;
+    b.onclick = () => onTap(it, idx);
+    el.appendChild(b);
+  });
+}
+
+function drawScan() {
+  chips($('#screens'), SCREENS, s => s[1] === st.screen, s => { st.screen = s[1]; save(); drawScan(); });
+  chips($('#cols'), COLS, c => c[1] === st.col, c => { st.col = c[1]; save(); drawScan(); });
+  const el = $('#screener');
+  el.style.height = '640px';
+  widget(el, 'screener', {width:'100%', height:'100%', defaultColumn:st.col, defaultScreen:st.screen, market:'india', showToolbar:true, colorTheme:'dark', locale:'en'});
+}
+
+function drawSyms(el) {
+  chips(el, LIST, s => full(s) === full(st.sym), s => { st.sym = s; save(); drawAnalyze(); drawChart(); drawSymRows(); });
+}
+function drawSymRows() { drawSyms($('#syms')); drawSyms($('#syms2')); }
+
+function drawAnalyze() {
+  chips($('#tfs'), TFS, (t, i) => i === st.tf, (t, i) => { st.tf = i; save(); drawAnalyze(); });
+  const el = $('#ta');
+  el.style.height = '440px';
+  widget(el, 'technical-analysis', {interval:TFS[st.tf][1], width:'100%', height:'100%', isTransparent:true, symbol:full(st.sym), showIntervalTabs:true, locale:'en', colorTheme:'dark'});
+}
+
+function drawChart() {
+  widget($('#adv'), 'advanced-chart', {autosize:true, symbol:full(st.sym), interval:TFS[st.tf][2], timezone:'Asia/Kolkata', theme:'dark', style:'1', locale:'en', allow_symbol_change:true, hide_side_toolbar:false, support_host:'https://www.tradingview.com'});
+}
+
+const drawn = {};
+function show(t) {
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === t));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  if (!drawn[t]) {
+    drawn[t] = 1;
+    if (t === 'scan') drawScan();
+    if (t === 'analyze') { drawSymRows(); drawAnalyze(); }
+    if (t === 'chart') { drawSymRows(); drawChart(); }
+  }
+  window.scrollTo(0, 0);
+}
+
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => show(b.dataset.t));
+$('#f').onsubmit = e => {
+  e.preventDefault();
+  const v = $('#q').value.trim();
+  if (!v) return;
+  st.sym = v; save();
+  drawn.chart = 0;
+  drawAnalyze(); drawSymRows();
+  $('#q').blur();
+};
+show('scan');
+</script>
+</body>
+</html>
