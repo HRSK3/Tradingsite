@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Stranger | NSE Option Scanner</title>
-<meta name="description" content="Stranger: intraday NSE F&O scanner with locked signals after 9:30 AM IST, live trade tracking, hold/book/exit confirmations and an end-of-day scorecard. Educational use only.">
+<title>NSE Option Scanner</title>
+<meta name="description" content="Intraday NSE F&O scanner: locked signals after 9:30 AM IST with entry, stop, targets, and an end-of-day result and accuracy record. Educational use only.">
 <meta name="theme-color" content="#0e1621">
 <meta name="color-scheme" content="dark">
-<meta property="og:title" content="Stranger | NSE Option Scanner">
-<meta property="og:description" content="Locked intraday signals, live P/L and hold/book/exit confirmations.">
+<meta property="og:title" content="NSE Option Scanner">
+<meta property="og:description" content="Locked intraday signals with entry, stop, targets and an honest end-of-day scorecard.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e1621'/%3E%3Cpath d='M44 18H26a8 8 0 0 0 0 16h12a8 8 0 0 1 0 16H20' fill='none' stroke='%23f2b441' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e1621'/%3E%3Cpath d='M10 46l14-16 10 8 20-24' fill='none' stroke='%23f2b441' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 :root{--bg:#0e1621;--card:#16212f;--line:#263648;--tx:#e8edf2;--mu:#8fa0b3;--ac:#f2b441;--acx:#241a02;--up:#3ccf91;--dn:#ff6b6b}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -18,13 +18,9 @@ html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui
 header,main{max-width:900px;margin:0 auto}
 header{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 8px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.brand{display:flex;align-items:center;gap:10px;min-width:0}
-.logo{width:36px;height:36px;flex:none}
-h1{font-size:19px;margin:0;font-weight:800;letter-spacing:3px;line-height:1.1}
-.sub{display:block;color:var(--mu);font-size:11px;letter-spacing:.6px}
-.hr{display:flex;align-items:center;gap:8px;flex:none}
-header p{margin:6px 0 0;color:var(--mu);font-size:13px}
-.pill{font-size:12px;padding:2px 10px;border-radius:12px;border:1px solid var(--line);color:var(--mu);white-space:nowrap}
+h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.2px}
+header p{margin:2px 0 0;color:var(--mu);font-size:13px}
+.pill{flex:none;font-size:12px;padding:2px 10px;border-radius:12px;border:1px solid var(--line);color:var(--mu);white-space:nowrap}
 .pill.live{color:var(--up);border-color:var(--up)}
 main{padding:0 12px calc(90px + env(safe-area-inset-bottom,0px))}
 section{display:none}section.on{display:block}
@@ -32,9 +28,9 @@ section{display:none}section.on{display:block}
 .row::-webkit-scrollbar{display:none}
 .chip{flex:none;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--tx);font:inherit;font-size:14px;cursor:pointer}
 .chip.on{background:var(--ac);border-color:var(--ac);color:var(--acx);font-weight:700}
-.chip.sm{padding:5px 12px;font-size:13px}
 .chip:disabled{opacity:.5;cursor:default}
 .box{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.tall{height:calc(100vh - 290px);height:calc(100dvh - 290px);min-height:420px}
 .pad{padding:12px 14px}
 .hint{color:var(--mu);font-size:13px;margin:0 0 10px}
 .err{color:var(--dn)}
@@ -58,8 +54,6 @@ nav button.on{color:var(--ac);box-shadow:inset 0 3px 0 var(--ac)}
 .fh em{font-style:normal;font-weight:700;padding:3px 10px;border-radius:12px}
 .gd{font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid var(--line);color:var(--mu)}
 .gd.A{color:var(--up);border-color:var(--up)}.gd.B{color:var(--ac);border-color:var(--ac)}
-.act{display:inline-block;font-size:12px;font-weight:800;padding:2px 10px;border-radius:10px;letter-spacing:.3px}
-.act.hold{background:var(--up);color:#04201c}.act.book{background:var(--ac);color:var(--acx)}.act.exit{background:var(--dn);color:#2a0707}.act.wait{border:1px solid var(--line);color:var(--mu)}
 .u{color:var(--up)}.d{color:var(--dn)}.u2{background:var(--up);color:#04201c}.d2{background:var(--dn);color:#2a0707}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0 6px}
 .lvl{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
@@ -82,36 +76,14 @@ th{color:var(--mu);font-weight:600;font-size:12px}
 .gb i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:#fff;transform:translateX(-50%)}
 .kv{display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0 4px;font-size:13px;color:var(--mu)}
 .kv b{color:var(--tx)}
-.pb{position:relative;height:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;margin:12px 6px 24px}
-.pb .mk{position:absolute;top:-3px;width:2px;height:14px;background:var(--mu)}
-.pb .mk s{position:absolute;top:15px;left:50%;transform:translateX(-50%);font-size:10px;text-decoration:none;color:var(--mu);white-space:nowrap}
-.pb .now{position:absolute;top:-5px;width:10px;height:18px;border-radius:3px;background:#fff;transform:translateX(-50%)}
-.ci{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
-.ci>span:first-child{width:16px;flex:none;text-align:center;font-weight:800}
-.big{font-size:30px;font-weight:800;line-height:1.1}
 .disc{color:var(--mu);font-size:12px;line-height:1.5;border-top:1px solid var(--line);padding:12px 2px 0;margin-top:6px}
-/* overlays */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:20;display:flex;align-items:flex-end;justify-content:center}
-.ov[hidden]{display:none}
-.sheet{background:var(--bg);border:1px solid var(--line);border-radius:14px 14px 0 0;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:16px calc(16px + env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) 16px}
-@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:14px}}
-.sheet h2{margin:0 0 6px;font-size:18px}
-.sheet .x{float:right}
-.sheet input[type=email],.sheet input[type=password]{display:block;width:100%;margin:8px 0;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font:inherit}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-.btn{padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font:inherit;font-weight:600;cursor:pointer}
-.btn.p{background:var(--ac);border-color:var(--ac);color:var(--acx)}
-.btn:disabled{opacity:.5}
 </style>
 </head>
 <body>
 <header>
   <div class="top">
-    <div class="brand">
-      <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Stranger logo"><rect width="64" height="64" rx="14" fill="#16212f" stroke="#263648"/><path d="M44 18H26a8 8 0 0 0 0 16h12a8 8 0 0 1 0 16H20" fill="none" stroke="#f2b441" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="18" r="3.5" fill="#3ccf91"/><circle cx="18" cy="50" r="3.5" fill="#ff6b6b"/></svg>
-      <div><h1>STRANGER</h1><span class="sub">NSE OPTION SCANNER</span></div>
-    </div>
-    <div class="hr"><span class="pill" id="mkt" aria-live="polite">Market status...</span><button class="chip sm" id="acctBtn" type="button">Login</button></div>
+    <h1>NSE Option Scanner</h1>
+    <span class="pill" id="mkt" aria-live="polite">Market status...</span>
   </div>
   <p>Intraday signals lock after 9:30 AM IST. Results are scored after 3:30 PM.</p>
 </header>
@@ -122,14 +94,14 @@ th{color:var(--mu);font-weight:600;font-size:12px}
   <div class="row" id="screens" aria-label="Screens"></div>
   <div class="row" id="cols" aria-label="Columns"></div>
   <div class="box" id="screener"></div>
-  <p class="hint">If the table above stays blank, an ad-blocker or tracking protection is probably blocking TradingView widgets. The other tabs do not depend on them.</p>
+  <p class="hint">If the table above stays blank, an ad-blocker or tracking protection is probably blocking TradingView widgets. The F&amp;O, Track and Analyze tabs do not depend on them.</p>
   <div class="box pad">
     <b>Breakout check</b>
     <ol>
       <li>Pick stocks from Gainers or Volume that have made a big move.</li>
       <li>Tap a stock name in the table, then open Analyze.</li>
       <li>Continue only if 5m and 15m both show Buy or Strong buy.</li>
-      <li>Look at the 5-minute chart in your broker or TradingView app for a clean break of a recent high (or low, for puts).</li>
+      <li>Open Chart and look for a clean break of a recent high (or low, for puts).</li>
     </ol>
   </div>
 </section>
@@ -143,36 +115,21 @@ th{color:var(--mu);font-weight:600;font-size:12px}
     <input id="lev" type="number" min="1" max="30" step="1" inputmode="numeric">
     <span>x (option % is a rough estimate: stock % x this number)</span>
   </div>
-  <div class="set"><label><input type="checkbox" id="liveChk"> Live prices every 5 seconds</label><span>(only for your locked signals, while this page and the market are open)</span></div>
+  <div class="set"><label><input type="checkbox" id="live"> Live prices every 5 seconds</label><span id="liveNote">(only for your locked signals, while this page is open and the market is open)</span></div>
   <p class="hint" id="fnoMsg" hidden></p>
   <div id="fnoList"></div>
-  <p class="hint" id="fnoTap" hidden>Tap a signal to open its details: entry, stop, targets, running price, P/L and hold / book / exit confirmations.</p>
   <details id="extBox" class="box pad" hidden><summary id="extSum"></summary><div id="extList" class="mu"></div></details>
   <details class="box pad">
     <summary>How signals work</summary>
     <ul>
-      <li><b>Timing:</b> no signal is created before <b>9:30 AM IST</b>. New signals are created until <b>2:30 PM</b>. It is intraday: assume you exit by 3:15 PM.</li>
-      <li><b>Locked:</b> a signal's Entry, Stop and Targets are saved with the time and never change on refresh. Each stock gets at most one signal per day.</li>
+      <li><b>Timing:</b> no signal is created before <b>9:30 AM IST</b> (the first 15 minutes are noise). New signals are created until <b>2:30 PM</b>. It is intraday: assume you exit by 3:15 PM.</li>
+      <li><b>Locked:</b> when a signal is created, its Entry, Stop and Targets are saved on this device with the time. They never change on refresh. Each stock gets at most one signal per day.</li>
       <li><b>Direction check:</b> a call (CE) needs the stock above its day open and up on the day, with Daily and 15m ratings both bullish. A put (PE) is the mirror image.</li>
-      <li><b>Entry:</b> take the trade only after the stock trades through the Entry level. If it never does, the result is "No entry".</li>
+      <li><b>Entry:</b> take the trade only after the stock trades through the Entry level (the day's high for CE, low for PE at signal time). If it never does, the result is "No entry".</li>
       <li><b>Stop</b> is 0.4 ATR beyond entry. <b>T1 / T2</b> are 0.6 and 1.0 ATR in your favour. The scorecard assumes you book everything at T1.</li>
-      <li><b>Live tab:</b> shows entered trades, top 5 by profit %, with hold / book / exit confirmations.</li>
+      <li><b>Results:</b> after 3:30 PM the Track tab shows, for each signal, the move from signal price to close, whether Entry / Target / Stop was hit, and the accuracy.</li>
+      <li>The % under each level is the <b>stock</b> move. The "option" % multiplies it by the leverage you set. Real option P/L depends on strike, expiry, IV and spread.</li>
       <li><b>Grade</b> adds one point each for: strong combined rating, volume 1.5x or more, 5m agreeing, move not stretched, price near the trigger. A = 4+, B = 3, C = fewer.</li>
-    </ul>
-  </details>
-</section>
-
-<section id="live">
-  <div class="bar"><span class="hint" id="runStat" style="margin:0" aria-live="polite"></span><div class="row" id="runMode" style="padding:0"></div></div>
-  <div id="runList"></div>
-  <details class="box pad">
-    <summary>How the hold / book / exit confirmation works</summary>
-    <ul>
-      <li>Each running trade is checked against live indicators: 5m and 15m TradingView ratings, price versus VWAP, MACD (5m), RSI (5m), and how much of the peak profit has been given back.</li>
-      <li>Each indicator supports your direction (+), opposes it (-) or is neutral. The count of supporting indicators is the <b>confirmation score</b>. It is a checklist, <b>not a probability</b>.</li>
-      <li><b>HOLD</b>: profit or plan intact and most confirmations support it. <b>BOOK PROFIT</b>: profit exists but momentum is fading, price gave back a lot, RSI is stretched, or Target 1 is reached without strong support. <b>EXIT NOW</b>: price is at the stop, or confirmations have turned against a trade that is not in profit.</li>
-      <li><b>Suggested trailing stop:</b> original stop first. After half the distance to Target 1, move it to entry. After Target 1, it locks about 70% of the Target 1 profit.</li>
-      <li>If VWAP, MACD or RSI are missing, the check uses fewer indicators. These are rules of thumb, not guarantees, and indicators lag fast reversals.</li>
     </ul>
   </details>
 </section>
@@ -198,38 +155,36 @@ th{color:var(--mu);font-weight:600;font-size:12px}
   <div class="row" id="syms" aria-label="Symbols"></div>
   <div class="box pad" id="anPanel"></div>
   <details id="dialBox" class="box pad">
-    <summary>TradingView dial (optional)</summary>
+    <summary>TradingView dial and timeframe (optional)</summary>
     <div class="row" id="tfs" aria-label="Timeframes" style="margin-top:8px"></div>
     <div id="ta" style="height:440px"></div>
     <p class="hint" style="margin:8px 0 0">If this stays blank, an ad-blocker or tracking protection is blocking TradingView widgets. The panel above uses TradingView's scanner data directly and does not need them.</p>
   </details>
 </section>
 
+<section id="chart">
+  <div class="row" id="syms2" aria-label="Symbols"></div>
+  <div class="row" id="tfs2" aria-label="Timeframes"></div>
+  <div class="box tall" id="adv"></div>
+  <p class="hint">Blank chart? An ad-blocker or tracking protection may be blocking TradingView. <a id="tvLink" href="https://in.tradingview.com/chart/" target="_blank" rel="noopener">Open this chart on TradingView</a>.</p>
+</section>
+
 <footer class="disc">
-  <b>Disclaimer:</b> Educational tool only. Nothing here is investment advice or a recommendation to buy or sell any security, and no profit is guaranteed. The author is not a SEBI-registered investment adviser or research analyst. Signals, levels, confirmations, results and accuracy figures are generated automatically from TradingView technical data and ATR, are estimates, can be wrong, and data may be delayed. Options can lose their entire premium. Do your own research and confirm strike, premium and lot size with your broker. Market data and widgets are provided by TradingView; this site is not affiliated with TradingView or NSE.
+  <b>Disclaimer:</b> Educational tool only. Nothing here is investment advice or a recommendation to buy or sell any security, and no profit is guaranteed. The author is not a SEBI-registered investment adviser or research analyst. Signals, levels, results and accuracy figures are generated automatically from TradingView technical ratings and ATR, are estimates, can be wrong, and data may be delayed. Options can lose their entire premium. Do your own research and confirm strike, premium and lot size with your broker. Market data and widgets are provided by TradingView; this site is not affiliated with TradingView or NSE.
 </footer>
 </main>
 <nav aria-label="Sections">
   <button type="button" data-t="scan" class="on">Scan</button>
   <button type="button" data-t="fno">F&amp;O</button>
-  <button type="button" data-t="live">Live</button>
   <button type="button" data-t="track">Track</button>
   <button type="button" data-t="analyze">Analyze</button>
+  <button type="button" data-t="chart">Chart</button>
 </nav>
-
-<div id="dlg" class="ov" hidden role="dialog" aria-modal="true" aria-label="Signal details"><div class="sheet" id="dlgBody"></div></div>
-<div id="acct" class="ov" hidden role="dialog" aria-modal="true" aria-label="Account"><div class="sheet" id="acctBody"></div></div>
 
 <script>
 const $ = s => document.querySelector(s);
 const CDN = 'https://s3.tradingview.com/external-embedding/embed-widget-';
 const SCAN_URL = 'https://scanner.tradingview.com/india/scan';
-
-// ---- Cloud login (optional). Fill in these values from your Firebase project (see setup steps).
-// Leave apiKey as 'YOUR_API_KEY' to run in guest mode: data then stays on each device only.
-const FIREBASE_CONFIG = {apiKey:'YOUR_API_KEY', authDomain:'YOUR_PROJECT.firebaseapp.com', projectId:'YOUR_PROJECT_ID', appId:'YOUR_APP_ID'};
-const FIREBASE_VER = '13.1.0';
-
 const LIST = ['NIFTY','BANKNIFTY','SENSEX','RELIANCE','HDFCBANK','ICICIBANK','SBIN','AXISBANK','TCS','INFY','BAJFINANCE','LT','ITC','MARUTI','TATASTEEL','ADANIENT'];
 const SCREENS = [['Gainers','top_gainers'],['Volume','volume_leaders'],['Volatile','most_volatile'],['Losers','top_losers'],['Large caps','most_capitalized']];
 const COLS = [['Overview','overview'],['Performance','performance'],['Moving avg','moving_averages'],['Oscillators','oscillators']];
@@ -320,7 +275,7 @@ function sessionDate(now) {
 // ---- locked signals + scoring ----
 function makeSignal(r, now) {
   now = now || new Date();
-  return {id: istDate(now) + '|' + r.sym + '|' + (r.up ? 'CE' : 'PE'), date: istDate(now), t: now.getTime(), ts: now.getTime(),
+  return {id: istDate(now) + '|' + r.sym + '|' + (r.up ? 'CE' : 'PE'), date: istDate(now), t: now.getTime(),
     sym: r.sym, up: r.up, p0: r.c, hi0: r.h, lo0: r.l, e: r.e, sl: r.sl, t1: r.t1, t2: r.t2,
     risk: Math.abs(r.e - r.sl), riskPct: r.riskPct, p1: r.p1, p2: r.p2, rr1: r.rr1, rr2: r.rr2,
     grade: r.grade, d: r.d, m: r.m, f: r.f, rv: r.rv || 0,
@@ -331,7 +286,7 @@ function trackUpdate(t, c, h, l) {
   const k = t.up ? 1 : -1;
   if (Number.isFinite(h) && Number.isFinite(l)) { t.dh = h; t.dl = l; }
   if (!Number.isFinite(c)) return t;
-  t.last = c; t.ts = Date.now();
+  t.last = c;
   if (!t.trig) { if (k * (c - t.e) > 0) t.trig = true; else return t; }
   if (t.res === 'SL' || t.res === 'T2') return t;
   if (!t.res) {
@@ -375,7 +330,6 @@ function pnlPct(t, o) {
   if (o.res === 'T1' || o.res === 'T2') return t.p1;
   return (t.up ? 1 : -1) * (t.last - t.e) / t.e * 100;
 }
-const livePct = t => (t.up ? 1 : -1) * (t.last - t.e) / t.e * 100;   // running P/L on the stock, from entry to now
 function statusOf(t, o, over) {
   if (!o.trig) return over ? 'No entry' : 'Waiting for entry';
   if (o.res === 'SL') return 'Stop hit';
@@ -402,77 +356,6 @@ function trackStats(trades, ctx, grade) {
   return {n: L.length, trig: trigN, wins, t1, sl,
     winRate: trigN ? wins / trigN * 100 : 0, dirAcc: L.length ? dirOK / L.length * 100 : 0,
     avgR: trigN ? sumR / trigN : 0, avgPct: trigN ? sumP / trigN : 0};
-}
-
-// ---- hold / book / exit confirmation for a trade. ind: {r5, r15, rsi, macd, macds, vwap} (any may be missing)
-function advice(t, o, ind, over) {
-  const k = t.up ? 1 : -1, c = t.last, items = [], num = Number.isFinite;
-  const add = (label, state, text) => items.push({label, state, text});
-  ind = ind || {};
-  if (num(ind.r5)) add('5m rating', k * ind.r5 >= 0.1 ? 1 : k * ind.r5 <= -0.1 ? -1 : 0, sigLabel(ind.r5) + ' (' + ind.r5.toFixed(2) + ')');
-  if (num(ind.r15)) add('15m rating', k * ind.r15 >= 0.1 ? 1 : k * ind.r15 <= -0.1 ? -1 : 0, sigLabel(ind.r15) + ' (' + ind.r15.toFixed(2) + ')');
-  if (num(ind.vwap)) add('VWAP', k * (c - ind.vwap) > 0 ? 1 : -1, 'Price ' + (c > ind.vwap ? 'above' : 'below') + ' VWAP ' + ind.vwap.toFixed(2));
-  if (num(ind.macd) && num(ind.macds)) add('MACD 5m', k * (ind.macd - ind.macds) > 0 ? 1 : -1, 'MACD ' + (ind.macd > ind.macds ? 'above' : 'below') + ' its signal line');
-  let stretched = false;
-  if (num(ind.rsi)) {
-    const x = k * (ind.rsi - 50);
-    stretched = x >= 25;
-    add('RSI 5m', stretched ? 0 : x > 0 ? 1 : x <= -5 ? -1 : 0, 'RSI ' + ind.rsi.toFixed(0) + (stretched ? ', stretched: the move may fade' : ''));
-  }
-  let gb = 0;
-  if (o.trig) {
-    const best = t.up ? Math.max(t.dh || c, c) : Math.min(t.dl || c, c), peak = k * (best - t.e);
-    if (peak > 0) {
-      gb = k * (best - c) / peak;
-      add('Giveback', gb >= 0.5 ? -1 : gb >= 0.3 ? 0 : 1, gb >= 0.3 ? 'Gave back ' + Math.round(gb * 100) + '% of the peak profit' : 'Holding near the best price');
-    }
-  }
-  const score = items.reduce((a, x) => a + x.state, 0), max = items.length, supportive = items.filter(x => x.state > 0).length;
-  const prog = t.t1 !== t.e ? (c - t.e) / (t.t1 - t.e) : 0;
-  const pnlR = t.risk > 0 ? k * (c - t.e) / t.risk : 0;
-  // The trailing stop only ratchets forward: it is based on the best price reached since entry, not on where price is now.
-  const bestPx = o.trig ? (t.up ? Math.max(t.dh || c, c) : Math.min(t.dl || c, c)) : c;
-  const peakProg = t.t1 !== t.e ? (bestPx - t.e) / (t.t1 - t.e) : 0;
-  let trail = t.sl, trailNote = 'Original stop loss';
-  if (o.res === 'T1' || o.res === 'T2' || peakProg >= 1) { trail = t.e + 0.7 * (t.t1 - t.e); trailNote = 'Locks about 70% of the Target 1 profit'; }
-  else if (peakProg >= 0.5) { trail = t.e; trailNote = 'Breakeven (entry price)'; }
-  const f2 = x => (Math.round(x * 20) / 20).toFixed(2);
-  let action, label, cls, reason;
-  if (!o.trig) { action = 'WAIT'; label = 'WAIT'; cls = 'wait'; reason = 'Entry has not triggered. Enter only if the stock trades ' + (t.up ? 'above ' : 'below ') + f2(t.e) + '.'; }
-  else if (o.res === 'SL') { action = 'DONE'; label = 'STOPPED OUT'; cls = 'exit'; reason = 'The stop loss was hit.'; }
-  else if (over) { action = 'DONE'; label = 'CLOSED'; cls = 'wait'; reason = 'The market is closed. Intraday trades should be squared off.'; }
-  else if (k * (c - trail) <= 0) {
-    if (trail === t.sl) { action = 'EXIT'; label = 'EXIT NOW'; cls = 'exit'; reason = 'Price is at the stop loss.'; }
-    else { action = 'BOOK'; label = 'BOOK PROFIT'; cls = 'book'; reason = 'Price fell back through the suggested trailing stop (' + f2(trail) + '). Protect what is left.'; }
-  }
-  else if (o.res === 'T1' || o.res === 'T2' || prog >= 1) {
-    if (score >= 2 && gb < 0.3 && !stretched) { action = 'HOLD'; label = 'HOLD REST'; cls = 'hold'; reason = 'Target 1 reached and confirmations still support the move. Book part of the position and hold the rest with the stop at ' + f2(trail) + '.'; }
-    else { action = 'BOOK'; label = 'BOOK PROFIT'; cls = 'book'; reason = 'Target 1 reached and momentum is not clearly supportive. Booking the profit is reasonable.'; }
-  }
-  else if (pnlR > 0) {
-    if (gb >= 0.5 || score <= -1 || stretched) { action = 'BOOK'; label = 'BOOK PROFIT'; cls = 'book'; reason = 'You are in profit but momentum is fading. Securing profit is reasonable.'; }
-    else if (score >= 2) { action = 'HOLD'; label = 'HOLD'; cls = 'hold'; reason = 'Most confirmations support the move. Keep the stop at ' + f2(trail) + '.'; }
-    else { action = 'HOLD'; label = 'HOLD (CAUTION)'; cls = 'hold'; reason = 'Confirmations are mixed. Hold only with the stop at ' + f2(trail) + '.'; }
-  }
-  else {
-    if (score <= -2) { action = 'EXIT'; label = 'EXIT NOW'; cls = 'exit'; reason = 'Confirmations have turned against the trade and it is not in profit. Cutting early is reasonable.'; }
-    else { action = 'HOLD'; label = 'HOLD'; cls = 'hold'; reason = 'Not in profit yet. Stay with the plan and respect the stop at ' + f2(t.sl) + '.'; }
-  }
-  const ratio = max ? supportive / max : 0;
-  return {action, label, cls, reason, score, max, supportive, items, trail, trailNote, prog, gb, stretched, pnlR,
-    conf: !max ? 'Unknown' : ratio >= 0.7 ? 'High' : ratio >= 0.4 ? 'Medium' : 'Low'};
-}
-
-// Merge local and cloud copies of trades: a finished copy wins, otherwise the most recently updated copy.
-function mergeTrades(a, b) {
-  const m = new Map();
-  for (const t of a.concat(b)) {
-    const p = m.get(t.id);
-    if (!p) { m.set(t.id, t); continue; }
-    const pick = (t.fin && !p.fin) ? t : (p.fin && !t.fin) ? p : ((t.ts || 0) > (p.ts || 0) ? t : p);
-    m.set(t.id, pick);
-  }
-  return [...m.values()].sort((x, y) => x.t - y.t);
 }
 /*ENDPURE*/
 
@@ -528,12 +411,10 @@ const sgn = x => (x >= 0 ? '+' : '') + x.toFixed(2);
 const hhmm = ms => new Date(ms).toLocaleTimeString('en-GB', {timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hourCycle:'h23'});
 const istTime = d => d.toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata'}) + ' IST';
 const getCtx = () => { const ms = marketState(); return {open: ms.open, mins: ms.mins, sd: sessionDate()}; };
-const optPct = (p, cap) => Math.round(Math.max(-100, Math.min(cap || 999, p * st.lev)));
 
 // ---------- tabs ----------
 let cur = 'scan';
 const drawn = {};
-const DATA_TABS = ['fno', 'live', 'track'];
 function show(t, keepScroll) {
   cur = t;
   document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === t));
@@ -543,17 +424,11 @@ function show(t, keepScroll) {
     if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
   if (!drawn[t]) { drawn[t] = 1; DRAW[t](); }
-  else if (DATA_TABS.includes(t)) { maybeRefreshFno(); refreshViews(); }
+  else if (t === 'fno' || t === 'track') { maybeRefreshFno(); if (t === 'track') renderTrack(); }
   if (!keepScroll) window.scrollTo(0, 0);
   try { history.replaceState(null, '', '#' + t); } catch (e) {}
 }
 function invalidate(...tabs) { tabs.forEach(t => drawn[t] = 0); show(cur, true); }
-function refreshViews() {
-  if (cur === 'fno') renderFno(false);
-  else if (cur === 'live') renderRunning();
-  else if (cur === 'track') renderTrack();
-  if (detailId) renderDetail();
-}
 
 // ---------- Scan ----------
 function drawScan() {
@@ -564,14 +439,16 @@ function drawScan() {
   widget(el, 'screener', {width:'100%', height:'100%', defaultColumn:st.col, defaultScreen:st.screen, market:'india', showToolbar:true, colorTheme:'dark', locale:'en'});
 }
 
-// ---------- Analyze: own panel from scanner data (no embed needed) ----------
+// ---------- symbol + timeframe chips ----------
 function symChips(el) {
   const items = LIST.some(s => full(s) === full(st.sym)) ? LIST : [st.sym, ...LIST];
-  chips(el, items, s => full(s) === full(st.sym), s => { st.sym = s; save(); drawn.analyze = 0; show(cur, true); });
+  chips(el, items, s => full(s) === full(st.sym), s => { st.sym = s; save(); drawn.analyze = drawn.chart = 0; show(cur, true); });
 }
 function tfChips(el) {
-  chips(el, TFS, (t, i) => i === st.tf, (t, i) => { st.tf = i; save(); tfChips(el); drawDial(); });
+  chips(el, TFS, (t, i) => i === st.tf, (t, i) => { st.tf = i; save(); drawn.chart = 0; if (cur === 'chart') show(cur, true); else drawDial(); tfChips($('#tfs')); });
 }
+
+// ---------- Analyze: own panel from scanner data (no embed needed) ----------
 const AN_TF = [['5 min','|5'],['15 min','|15'],['1 hour','|60'],['Daily','']];
 const AN_BASIC = ['close','change','high','low','open','ATR','relative_volume_10d_calc','Recommend.All|5','Recommend.All|15','Recommend.All'];
 const AN_FULL = AN_BASIC.concat(['RSI'], ...AN_TF.map(x => ['Recommend.MA' + x[1], 'Recommend.Other' + x[1]]), ['Recommend.All|60']);
@@ -602,14 +479,14 @@ async function loadAnalysis(silent) {
   if (tok !== anTok) return;                      // a newer request replaced this one
   if (!o && silent) return;                       // keep the last good panel on a failed background refresh
   if (!o || !Number.isFinite(o.close)) {
-    box.innerHTML = '<p class="hint err" style="margin:0">No scanner data for ' + esc(tk) + '. Indices such as NIFTY, BANKNIFTY and SENSEX are not in the stock scanner, or the request was blocked. Try a stock symbol or the optional TradingView dial below.</p>';
+    box.innerHTML = '<p class="hint err" style="margin:0">No scanner data for ' + esc(tk) + '. Indices such as NIFTY, BANKNIFTY and SENSEX are not in the stock scanner, or the request was blocked. Try a stock symbol, open the optional TradingView dial below, or use the Chart tab.</p>';
     return;
   }
   const a5 = o['Recommend.All|5'], a15 = o['Recommend.All|15'];
   let verdict = '';
   if (Number.isFinite(a5) && Number.isFinite(a15)) {
-    if (a5 >= 0.1 && a15 >= 0.1) verdict = '<p class="u" style="margin:8px 0 0"><b>5m and 15m both Buy or better.</b> The breakout check passes for a call (CE). Next, look for a clean break of the recent high on your 5-minute chart.</p>';
-    else if (a5 <= -0.1 && a15 <= -0.1) verdict = '<p class="d" style="margin:8px 0 0"><b>5m and 15m both Sell or worse.</b> The breakout check passes for a put (PE). Next, look for a clean break of the recent low on your 5-minute chart.</p>';
+    if (a5 >= 0.1 && a15 >= 0.1) verdict = '<p class="u" style="margin:8px 0 0"><b>5m and 15m both Buy or better.</b> The breakout check passes for a call (CE). Next, look for a clean break of the recent high on the Chart tab.</p>';
+    else if (a5 <= -0.1 && a15 <= -0.1) verdict = '<p class="d" style="margin:8px 0 0"><b>5m and 15m both Sell or worse.</b> The breakout check passes for a put (PE). Next, look for a clean break of the recent low on the Chart tab.</p>';
     else verdict = '<p class="mu" style="margin:8px 0 0"><b>5m and 15m do not agree.</b> Skip this one, or wait for them to line up.</p>';
   }
   const atrPct = o.ATR && o.close ? o.ATR / o.close * 100 : null, n = x => Number.isFinite(x);
@@ -637,51 +514,41 @@ function drawAnalyze() {
 }
 $('#dialBox').addEventListener('toggle', drawDial);
 
-// ---------- storage (per user when logged in) ----------
-let user = null;
-const tkey = () => user ? 'nse-track2-' + user.uid : 'nse-track2';
-const loadTrades = () => { try { const a = JSON.parse(localStorage.getItem(tkey()) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
-const cloudDirty = new Set(), cloudSer = {}, cloudSig = {};
-let cloudUrgent = false;
-function saveTrades(a) {
-  a = a.slice(-600);
-  try { localStorage.setItem(tkey(), JSON.stringify(a)); } catch (e) {}
-  if (!user) return;
-  const dates = [...new Set(a.map(t => t.date))];
-  for (const d of dates) {
-    const L = a.filter(t => t.date === d), ser = JSON.stringify(L);
-    if (ser === cloudSer[d]) continue;
-    cloudSer[d] = ser; cloudDirty.add(d);
-    const sig = L.map(t => t.id + (t.trig ? 1 : 0) + (t.res || '') + (t.fin ? 1 : 0)).join();
-    if (sig !== cloudSig[d]) { cloudSig[d] = sig; cloudUrgent = true; }   // an event happened (new signal, entry, target, stop, final)
-  }
+// ---------- Chart ----------
+function drawChart() {
+  symChips($('#syms2')); tfChips($('#tfs2'));
+  $('#tvLink').href = 'https://in.tradingview.com/chart/?symbol=' + encodeURIComponent(full(st.sym));
+  widget($('#adv'), 'advanced-chart', {autosize:true, symbol:full(st.sym), interval:TFS[st.tf][2], timezone:'Asia/Kolkata', theme:'dark', style:'1', locale:'en', allow_symbol_change:true, hide_side_toolbar:false, support_host:'https://www.tradingview.com'});
 }
+
+// ---------- storage ----------
+const loadTrades = () => { try { const a = JSON.parse(localStorage.getItem('nse-track2') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+const saveTrades = a => { try { localStorage.setItem('nse-track2', JSON.stringify(a.slice(-600))); } catch (e) {} };
 
 // ---------- F&O: locked signals ----------
 let lastData = null, inFlight = false, quoteAt = null;
-const ind = {};                                                       // latest indicator readings per symbol (memory only)
 const setStat = t => { $('#fnoStat').textContent = t; };
 
 function cardHtml(t, ctx) {
-  const o = outcome(t), over = isOver(t, ctx), side = t.up ? 'CE' : 'PE', k = t.up ? 1 : -1;
+  const o = outcome(t), over = isOver(t, ctx), lev = st.lev, side = t.up ? 'CE' : 'PE', k = t.up ? 1 : -1;
   const fav = t.up ? '+' : '-', adv = t.up ? '-' : '+';
+  const opt = p => Math.round(Math.max(-100, Math.min(999, p * lev)));
   const cell = (cls, lab, price, l1, l2) => `<div class="lvl ${cls}"><small>${lab}</small><b>${f2(price)}</b><span>${l1}</span><span>${l2}</span></div>`;
   const r = tradeR(t, o), pp = pnlPct(t, o), mv = k * (t.last - t.p0) / t.p0 * 100;
   const cls = r === null ? 'mu' : r > 0 ? 'u' : r < 0 ? 'd' : 'mu';
-  const res = o.trig ? ` | stock ${sgn(pp)}% | option about ${optPct(pp) >= 0 ? '+' : ''}${optPct(pp)}%` : '';
-  const a = o.trig && !over ? advice(t, o, ind[t.sym], over) : null;
+  const res = o.trig ? ` | stock ${sgn(pp)}% | option about ${opt(pp) >= 0 ? '+' : ''}${opt(pp)}%` : '';
   const sig = (lbl, v) => lbl + ' ' + sigLabel(v);
-  return `<button type="button" class="fc" data-id="${esc(t.id)}" aria-label="Open ${esc(t.sym)} details">`
-    + `<div class="fh"><b>${esc(t.sym)}</b><span class="gd ${esc(t.grade)}">Grade ${esc(t.grade)}</span><span class="mu">Signal ${hhmm(t.t)}</span>${a ? `<span class="act ${a.cls}">${esc(a.label)}</span>` : ''}<em class="${t.up ? 'u2' : 'd2'}" style="margin-left:auto">Buy ${side}</em></div>`
+  return `<button type="button" class="fc" data-s="${esc(t.sym)}" aria-label="Analyze ${esc(t.sym)}">`
+    + `<div class="fh"><b>${esc(t.sym)}</b><span class="gd ${esc(t.grade)}">Grade ${esc(t.grade)}</span><span class="mu">Signal ${hhmm(t.t)}</span><em class="${t.up ? 'u2' : 'd2'}" style="margin-left:auto">Buy ${side}</em></div>`
     + `<div class="mu">Strike about ${atm(t.p0)} ${side} (ATM, approx) | locked, will not change</div>`
     + `<div class="grid4">`
     + cell('en', 'ENTRY ' + (t.up ? 'above' : 'below'), t.e, 'stock price', 'on break of ' + (t.up ? 'high' : 'low'))
-    + cell('sl', 'STOP LOSS', t.sl, `stock ${adv}${t.riskPct.toFixed(2)}%`, `option about -${Math.min(optPct(t.riskPct), 100)}%`)
-    + cell('tp', 'TARGET 1', t.t1, `stock ${fav}${t.p1.toFixed(2)}%`, `option about +${optPct(t.p1)}%`)
-    + cell('tp', 'TARGET 2', t.t2, `stock ${fav}${t.p2.toFixed(2)}%`, `option about +${optPct(t.p2)}%`)
+    + cell('sl', 'STOP LOSS', t.sl, `stock ${adv}${t.riskPct.toFixed(2)}%`, `option about -${Math.min(opt(t.riskPct), 100)}%`)
+    + cell('tp', 'TARGET 1', t.t1, `stock ${fav}${t.p1.toFixed(2)}%`, `option about +${opt(t.p1)}%`)
+    + cell('tp', 'TARGET 2', t.t2, `stock ${fav}${t.p2.toFixed(2)}%`, `option about +${opt(t.p2)}%`)
     + `</div>`
     + `<div class="mu">Signal price ${f2(t.p0)} | ${over ? 'Close' : 'Now'} ${f2(t.last)} (${sgn(mv)}% from signal) | Reward:Risk T1 1:${t.rr1.toFixed(1)}, T2 1:${t.rr2.toFixed(1)}</div>`
-    + `<div class="mu">${sig('5m', t.f)} | ${sig('15m', t.m)} | ${sig('Daily', t.d)} | Vol ${t.rv ? t.rv.toFixed(1) : '-'}x (at signal)</div>`
+    + `<div class="mu">${sig('5m', t.f)} | ${sig('15m', t.m)} | ${sig('Daily', t.d)} | Vol ${t.rv ? t.rv.toFixed(1) : '-'}x</div>`
     + `<div class="st ${cls}"><b>${statusOf(t, o, over)}</b>${res}${o.amb ? ' | Stop and Target 1 both in range, order unknown, scored as loss' : ''}</div></button>`;
 }
 
@@ -690,7 +557,7 @@ function renderFno(stale) {
   chips($('#fnoFilter'), SIDES, s => s[1] === st.side, s => { st.side = s[1]; save(); renderFno(stale); });
   chips($('#fnoGrade'), GRADES, g => g[1] === st.grade, g => { st.grade = g[1]; save(); renderFno(stale); });
   $('#lev').value = st.lev;
-  $('#liveChk').checked = st.live;
+  $('#live').checked = st.live;
   const all = loadTrades().filter(t => t.date === ctx.sd);
   const order = {A: 0, B: 1, C: 2};
   const list = all.filter(t => (st.side === 'all' || (st.side === 'ce') === t.up) && (st.grade === 'all' || t.grade !== 'C'))
@@ -703,9 +570,8 @@ function renderFno(stale) {
     else if (ctx.open) m = 'No stock qualifies yet. Signals are created automatically when this page is open and one passes every check.';
     else m = 'No signals were locked in the last session on this device. Signals are created only while this page is open during 9:30 AM to 2:30 PM IST.';
   } else if (all.length && !(st.side === 'all' && st.grade === 'all')) m = all.length + ' signals locked today; filters are hiding some.';
-  msg.hidden = !m; msg.className = 'hint'; msg.textContent = m;
+  msg.hidden = !m; msg.textContent = m;
   $('#fnoList').innerHTML = list.map(t => cardHtml(t, ctx)).join('');
-  $('#fnoTap').hidden = !list.length;
   const ext = lastData ? lastData.setups.filter(r => r.extended) : [];
   $('#extBox').hidden = !ext.length;
   $('#extSum').textContent = 'Extended moves, not chased (' + ext.length + ')';
@@ -734,10 +600,9 @@ async function loadFno() {
     const j = await res.json();
     if (!j || !Array.isArray(j.data)) throw new Error('Unexpected response');
     lastData = {setups: buildSetups(j.data), got: j.data.length, at: new Date()};
-    j.data.forEach(x => { const s = String(x.s).split(':')[1]; ind[s] = Object.assign(ind[s] || {}, {r5: x.d[6], r15: x.d[5], rd: x.d[4]}); });
     syncTracker(j.data, lastData.setups);
     renderFno(false);
-    refreshViews();
+    if (cur === 'track') renderTrack();
   } catch (e) {
     if (lastData) renderFno(true);
     else {
@@ -745,6 +610,7 @@ async function loadFno() {
       $('#fnoMsg').className = 'hint err';
       $('#fnoMsg').textContent = 'Could not load live data. TradingView may be blocking requests from this browser or network. Tap Refresh to retry.';
       setStat('Load failed');
+      renderFno(true);
     }
   } finally {
     clearTimeout(timer);
@@ -771,134 +637,36 @@ function syncTracker(data, setups) {
     if (t.date !== sd || t.fin) continue;
     const p = px[t.sym];
     if (p) trackUpdate(t, p.c, p.h, p.l);
-    if (finalWindow) { t.fin = true; t.ts = Date.now(); }
+    if (finalWindow) t.fin = true;
   }
   saveTrades(trades);
 }
 function needsFinal() { const sd = sessionDate(); return loadTrades().some(t => t.date === sd && !t.fin); }
 function maybeRefreshFno() {
   if (!lastData) return loadFno();
+  renderFno(false);
   if (Date.now() - lastData.at.getTime() > 60000 && (marketState().open || needsFinal())) loadFno();
 }
 function drawFno() { loadFno(); }
-function drawLive() { maybeRefreshFno(); renderRunning(); }
 function drawTrack() { maybeRefreshFno(); renderTrack(); }
 
 $('#fnoGo').onclick = loadFno;
 $('#lev').onchange = e => {
   const v = Math.round(+e.target.value);
   st.lev = Number.isFinite(v) ? Math.min(30, Math.max(1, v)) : 6;
-  save(); refreshViews();
+  save(); renderFno(false);
 };
-function cardClick(e) {
+$('#fnoList').addEventListener('click', e => {
   const c = e.target.closest('.fc');
-  if (c && c.dataset.id) openDetail(c.dataset.id);
-}
-$('#fnoList').addEventListener('click', cardClick);
-
-// ---------- Live tab: entered trades, top 5 by profit % ----------
-let runAll = false;
-function levelBar(t) {
-  const k = t.up ? 1 : -1, c = t.last, vals = [t.sl, t.e, t.t1, t.t2, c], lo = Math.min(...vals), hi = Math.max(...vals), span = (hi - lo) || 1;
-  const pos = x => Math.max(0, Math.min(100, (k > 0 ? (x - lo) : (hi - x)) / span * 94 + 3));   // profit direction is always to the right
-  const mk = (x, lab) => `<i class="mk" style="left:${pos(x)}%"><s>${lab}</s></i>`;
-  return `<div class="pb" aria-hidden="true">${mk(t.sl, 'SL')}${mk(t.e, 'Entry')}${mk(t.t1, 'T1')}${mk(t.t2, 'T2')}<b class="now" style="left:${pos(c)}%"></b></div>`;
-}
-function renderRunning() {
-  const ctx = getCtx(), today = loadTrades().filter(t => t.date === ctx.sd);
-  chips($('#runMode'), [['Top 5', false], ['All', true]], m => m[1] === runAll, m => { runAll = m[1]; renderRunning(); });
-  const run = today.map(t => ({t, o: outcome(t)})).filter(x => x.o.trig && x.o.res !== 'SL' && !isOver(x.t, ctx))
-    .map(x => ({t: x.t, o: x.o, pct: livePct(x.t), a: advice(x.t, x.o, ind[x.t.sym], false)}))
-    .sort((a, b) => b.pct - a.pct);
-  const waiting = today.filter(t => !outcome(t).trig && !isOver(t, ctx)).length;
-  const shown = runAll ? run : run.slice(0, 5);
-  $('#runStat').textContent = run.length + ' running' + (run.length > shown.length ? ', showing top ' + shown.length + ' by profit %' : '') + ' | ' + waiting + ' waiting for entry' + (ctx.open ? '' : ' | Market closed');
-  if (!shown.length) {
-    $('#runList').innerHTML = '<div class="box pad"><p class="hint" style="margin:0">' + (ctx.open
-      ? 'No trade has entered yet. A signal becomes a running trade when the stock trades through its Entry level. Keep this page open.'
-      : 'The market is closed. See the Track tab for today\'s results.') + '</p></div>';
-    return;
-  }
-  $('#runList').innerHTML = shown.map(x => {
-    const t = x.t, a = x.a, side = t.up ? 'CE' : 'PE', cls = x.pct >= 0 ? 'u' : 'd';
-    return `<button type="button" class="fc" data-id="${esc(t.id)}" aria-label="Open ${esc(t.sym)} details">`
-      + `<div class="fh"><b>${esc(t.sym)}</b><span class="gd ${esc(t.grade)}">${esc(t.grade)}</span><em class="${t.up ? 'u2' : 'd2'}">${side}</em><span class="act ${a.cls}">${esc(a.label)}</span>`
-      + `<span class="px"><b class="${cls}" style="font-size:18px">${sgn(x.pct)}%</b> <span class="mu">option about ${optPct(x.pct) >= 0 ? '+' : ''}${optPct(x.pct)}%</span></span></div>`
-      + `<div class="mu">Entry ${f2(t.e)} | Now ${f2(t.last)} | Stop ${f2(t.sl)} | T1 ${f2(t.t1)} | T2 ${f2(t.t2)}</div>`
-      + levelBar(t)
-      + `<div class="mu">${esc(a.reason)}</div>`
-      + `<div class="mu">Confirmations ${a.supportive} of ${a.max} support | Suggested stop ${f2(a.trail)} (${esc(a.trailNote)})</div></button>`;
-  }).join('');
-}
-$('#runList').addEventListener('click', cardClick);
-
-// ---------- Signal detail view ----------
-let detailId = null;
-function openDetail(id) {
-  detailId = id;
-  $('#dlg').hidden = false;
-  document.body.style.overflow = 'hidden';
-  renderDetail();
-}
-function closeDetail() {
-  detailId = null;
-  $('#dlg').hidden = true;
-  document.body.style.overflow = '';
-}
-function renderDetail() {
-  if (!detailId) return;
-  const body = $('#dlgBody'), trades = loadTrades(), t = trades.find(x => x.id === detailId);
-  if (!t) { body.innerHTML = '<button class="btn x" data-a="close" type="button">Close</button><p class="hint">This signal is no longer available.</p>'; return; }
-  const ctx = getCtx(), o = outcome(t), over = isOver(t, ctx), a = advice(t, o, ind[t.sym], over), k = t.up ? 1 : -1, c = t.last, side = t.up ? 'CE' : 'PE';
-  const lp = livePct(t), cls = !o.trig ? 'mu' : lp >= 0 ? 'u' : 'd';
-  const mv = k * (c - t.p0) / t.p0 * 100;
-  const buf = k * (c - t.sl) / c * 100, toT1 = k * (t.t1 - c) / c * 100, toT2 = k * (t.t2 - c) / c * 100;
-  const row = (lab, price, note, c2) => `<tr><td>${lab}</td><td class="${c2 || ''}"><b>${f2(price)}</b></td><td class="mu">${note}</td></tr>`;
-  const items = a.items.length ? a.items.map(x => `<div class="ci"><span class="${x.state > 0 ? 'u' : x.state < 0 ? 'd' : 'mu'}">${x.state > 0 ? '&#10003;' : x.state < 0 ? '&#10007;' : '&#8226;'}</span><span><b>${esc(x.label)}</b> <span class="mu">${esc(x.text)}</span></span></div>`).join('')
-    : '<p class="hint" style="margin:0">No live indicator data yet. Keep the page open; readings arrive with the next refresh.</p>';
-  const hs = trackStats(trades, ctx, t.grade);
-  const hist = hs.trig >= 10 ? `Grade ${esc(t.grade)} signals on this account reached Target 1 in ${Math.round(hs.t1 / hs.trig * 100)}% of ${hs.trig} entered trades.` : `Not enough history yet (needs 10 entered Grade ${esc(t.grade)} trades, has ${hs.trig}).`;
-  body.innerHTML = `<button class="btn x" data-a="close" type="button">Close</button>`
-    + `<h2>${esc(t.sym)} <em class="${t.up ? 'u2' : 'd2'}" style="font-style:normal;font-size:13px;padding:2px 10px;border-radius:12px">Buy ${side}</em> <span class="gd ${esc(t.grade)}">Grade ${esc(t.grade)}</span></h2>`
-    + `<p class="hint">Signal locked at ${hhmm(t.t)} IST at ${f2(t.p0)}. Strike about ${atm(t.p0)} ${side} (ATM, approx). ${esc(statusOf(t, o, over))}.</p>`
-    + `<div class="box pad"><div class="mu">${over ? 'Close' : 'Running price'}</div><div class="big">${f2(c)} <span class="mu" style="font-size:14px;font-weight:500">${sgn(mv)}% from signal</span></div>`
-    + (o.trig ? `<div class="big ${cls}" style="margin-top:8px">${sgn(lp)}% <span style="font-size:14px;font-weight:600">stock P/L from entry</span></div>`
-        + `<div class="mu">Option estimate about ${optPct(lp) >= 0 ? '+' : ''}${optPct(lp)}% (stock % x ${st.lev}) | ${sgn(k * (c - t.e))} per share | ${(t.risk > 0 ? k * (c - t.e) / t.risk : 0).toFixed(2)}R</div>`
-        : `<div class="mu" style="margin-top:6px">Not entered yet. P/L starts once price trades ${t.up ? 'above' : 'below'} ${f2(t.e)}.</div>`) + `</div>`
-    + `<div class="box pad"><b>Levels</b>${levelBar(t)}<table>`
-    + row('Entry ' + (t.up ? 'above' : 'below'), t.e, o.trig ? 'triggered' : 'not triggered', 'u')
-    + row('Stop loss', t.sl, buf > 0 ? sgn(buf) + '% away' : 'breached', 'd')
-    + row('Suggested trailing stop', a.trail, esc(a.trailNote), '')
-    + row('Target 1', t.t1, toT1 > 0 ? toT1.toFixed(2) + '% to go' : 'reached', 'u')
-    + row('Target 2', t.t2, toT2 > 0 ? toT2.toFixed(2) + '% to go' : 'reached', 'u')
-    + `</table></div>`
-    + `<div class="box pad"><b>Hold / book / exit confirmation</b>`
-    + `<div style="margin:8px 0"><span class="act ${a.cls}" style="font-size:14px">${esc(a.label)}</span></div>`
-    + `<p style="margin:0 0 8px">${esc(a.reason)}</p>${items}`
-    + `<p class="mu" style="margin:8px 0 0">${a.supportive} of ${a.max} indicators support your direction (confirmation: <b>${a.conf}</b>). This is a checklist score, not a probability. ${hist}</p></div>`
-    + `<p class="hint">At signal time: 5m ${sigLabel(t.f)}, 15m ${sigLabel(t.m)}, Daily ${sigLabel(t.d)}, volume ${t.rv ? t.rv.toFixed(1) : '-'}x. Rules of thumb only; indicators lag fast reversals. Confirm strike, premium and lot size with your broker.</p>`
-    + `<div class="btns"><button class="btn p" data-a="an" data-s="${esc(t.sym)}" type="button">Analyze ${esc(t.sym)}</button><button class="btn" data-a="close" type="button">Close</button></div>`;
-}
-$('#dlg').addEventListener('click', e => {
-  if (e.target === $('#dlg')) return closeDetail();
-  const b = e.target.closest('[data-a]');
-  if (!b) return;
-  if (b.dataset.a === 'close') closeDetail();
-  if (b.dataset.a === 'an') { st.sym = b.dataset.s; save(); closeDetail(); drawn.analyze = 0; show('analyze'); }
+  if (!c) return;
+  st.sym = c.dataset.s; save();
+  drawn.analyze = drawn.chart = 0;
+  show('analyze');
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (detailId) closeDetail(); else if (!$('#acct').hidden) closeAcct(); } });
+setInterval(() => { if ((cur === 'fno' || cur === 'track') && !document.hidden && (marketState().open || needsFinal())) maybeRefreshFno(); }, 60000);
 
-// ---------- fast price poll for open signals (every 5s) ----------
-const FAST_BASIC = ['close','change','high','low','Recommend.All|5','Recommend.All|15','Recommend.All'];
-const FAST_EXT = FAST_BASIC.concat(['RSI|5','MACD.macd|5','MACD.signal|5','VWAP']);
-let fastFlight = false, fastFails = 0, fastPause = 0, extUntil = 0;
-async function quoteReq(tickers, cols, signal) {
-  const res = await fetch(SCAN_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify({symbols:{tickers}, columns: cols}), signal});
-  if (!res.ok) { const er = new Error('HTTP ' + res.status); er.status = res.status; throw er; }
-  const j = await res.json();
-  if (!j || !Array.isArray(j.data)) throw new Error('Unexpected response');
-  return j.data;
-}
+// Fast price poll: only the symbols of today's open signals, every 5 seconds.
+let fastFlight = false, fastFails = 0, fastPause = 0;
 async function fastPoll() {
   if (fastFlight || !st.live || Date.now() < fastPause) return;
   const ctx = getCtx();
@@ -906,38 +674,32 @@ async function fastPoll() {
   const syms = [...new Set(loadTrades().filter(t => t.date === ctx.sd && !t.fin).map(t => t.sym))];
   if (!syms.length) return;
   fastFlight = true;
-  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000), tk = syms.map(s => 'NSE:' + s);
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
   try {
-    let cols = Date.now() >= extUntil ? FAST_EXT : FAST_BASIC, data;
-    try { data = await quoteReq(tk, cols, ctl.signal); }
-    catch (e) {
-      if (cols === FAST_EXT && e.status >= 400 && e.status < 500) { extUntil = Date.now() + 600000; cols = FAST_BASIC; data = await quoteReq(tk, cols, ctl.signal); }  // an indicator column was rejected: fall back
-      else throw e;
-    }
+    const res = await fetch(SCAN_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+      body: JSON.stringify({symbols:{tickers: syms.map(s => 'NSE:' + s)}, columns:['close','change','high','low']}), signal: ctl.signal});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    if (!j || !Array.isArray(j.data)) throw new Error('Unexpected response');
     const px = {};
-    data.forEach(x => {
-      if (!x || !x.d) return;
-      const g = n => { const i = cols.indexOf(n); return i < 0 ? undefined : x.d[i]; }, s = String(x.s).split(':')[1];
-      if (Number.isFinite(g('close'))) px[s] = {c: g('close'), h: g('high'), l: g('low')};
-      ind[s] = Object.assign(ind[s] || {}, {r5: g('Recommend.All|5'), r15: g('Recommend.All|15'), rd: g('Recommend.All'), rsi: g('RSI|5'), macd: g('MACD.macd|5'), macds: g('MACD.signal|5'), vwap: g('VWAP')});
-    });
+    j.data.forEach(x => { if (x && x.d && Number.isFinite(x.d[0])) px[String(x.s).split(':')[1]] = {c: x.d[0], h: x.d[2], l: x.d[3]}; });
     const trades = loadTrades();                       // re-read so a full scan finishing meanwhile is not overwritten
     for (const t of trades) if (t.date === ctx.sd && !t.fin && px[t.sym]) trackUpdate(t, px[t.sym].c, px[t.sym].h, px[t.sym].l);
     saveTrades(trades);
     quoteAt = new Date(); fastFails = 0;
-    refreshViews();
+    if (cur === 'fno') renderFno(false);
+    if (cur === 'track') renderTrack();
   } catch (e) {
     if (++fastFails >= 3) { fastPause = Date.now() + 30000; fastFails = 0; }   // back off for 30s after 3 failures
   } finally { clearTimeout(to); fastFlight = false; }
 }
-setInterval(() => { if (DATA_TABS.includes(cur) && !document.hidden && (marketState().open || needsFinal())) maybeRefreshFno(); }, 60000);
 setInterval(() => {
   if (document.hidden || !st.live) return;
-  if (DATA_TABS.includes(cur) || detailId) fastPoll();
+  if (cur === 'fno' || cur === 'track') fastPoll();
   else if (cur === 'analyze' && marketState().open) loadAnalysis(true);
 }, 5000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden && DATA_TABS.includes(cur)) maybeRefreshFno(); else if (document.hidden) cloudFlush(); });
-$('#liveChk').onchange = e => { st.live = e.target.checked; save(); if (st.live) fastPoll(); };
+$('#live').onchange = e => { st.live = e.target.checked; save(); if (st.live) fastPoll(); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && (cur === 'fno' || cur === 'track')) maybeRefreshFno(); });
 
 // ---------- Track tab ----------
 function renderTrack() {
@@ -963,6 +725,7 @@ function renderTrack() {
     tb.innerHTML = `<b>Today's signals are still running</b><p class="hint" style="margin:4px 0 0">${today.length} locked. The result summary appears here after 3:30 PM IST. Open this page after the close so the final prices are captured.</p>`;
   } else tb.hidden = true;
 
+  const lev = st.lev, opt = p => Math.round(Math.max(-100, Math.min(999, p * lev)));
   const list = trades.slice().sort((a, b) => b.t - a.t).slice(0, 60);
   $('#trList').innerHTML = list.length ? list.map(t => {
     const o = outcome(t), over = isOver(t, ctx), r = tradeR(t, o), pp = pnlPct(t, o), k = t.up ? 1 : -1;
@@ -970,127 +733,10 @@ function renderTrack() {
     return `<div class="tr"><div class="l1"><span class="mu">${esc(t.date.slice(5))} ${hhmm(t.t)}</span><b>${esc(t.sym)}</b><span class="gd ${esc(t.grade)}">${esc(t.grade)}</span><span class="mu">${t.up ? 'CE' : 'PE'}</span>`
       + `<span class="s ${cls}">${esc(statusOf(t, o, over))}${r === null ? '' : ' ' + (r >= 0 ? '+' : '') + r.toFixed(2) + 'R'}</span></div>`
       + `<div class="mu">Signal ${f2(t.p0)} to ${over ? 'close' : 'now'} ${f2(t.last)} (${sgn(mv)}% from signal) | Entry ${f2(t.e)} ${o.trig ? 'hit' : 'not hit'} | Stop ${f2(t.sl)} | T1 ${f2(t.t1)} | T2 ${f2(t.t2)}`
-      + (o.trig ? ` | stock ${sgn(pp)}%, option about ${optPct(pp) >= 0 ? '+' : ''}${optPct(pp)}%` : '') + '</div></div>';
+      + (o.trig ? ` | stock ${sgn(pp)}%, option about ${opt(pp) >= 0 ? '+' : ''}${opt(pp)}%` : '') + '</div></div>';
   }).join('') : '<p class="hint" style="margin:6px 0 0">Nothing recorded yet. Keep the F&amp;O tab open between 9:30 AM and 2:30 PM IST and signals will be locked and logged here.</p>';
 }
-$('#trClear').onclick = () => { if (confirm('Delete all saved signals and results for this account on this device?')) { saveTrades([]); renderTrack(); renderFno(false); } };
-
-// ---------- account + cloud sync (Firebase Auth + Firestore, loaded only when configured) ----------
-const cloudOn = () => !!FIREBASE_CONFIG.apiKey && !/^YOUR_/.test(FIREBASE_CONFIG.apiKey);
-let fb = null, cloudErr = '', syncStatus = '', lastPush = 0;
-function importCloud() {
-  const B = 'https://www.gstatic.com/firebasejs/' + FIREBASE_VER + '/';
-  return Promise.all([import(B + 'firebase-app.js'), import(B + 'firebase-auth.js'), import(B + 'firebase-firestore.js')]);
-}
-async function initCloud() {
-  if (!cloudOn()) return;
-  try {
-    const [A, Au, Fs] = await importCloud();
-    const app = A.initializeApp(FIREBASE_CONFIG);
-    fb = {A, Au, Fs, auth: Au.getAuth(app), db: Fs.getFirestore(app)};
-    Au.onAuthStateChanged(fb.auth, onAuth);
-  } catch (e) { cloudErr = 'Could not load the login service. Check your connection or ad-blocker.'; renderAcct(); }
-}
-async function onAuth(u) {
-  user = u ? {uid: u.uid, email: u.email || '', name: u.displayName || ''} : null;
-  Object.keys(cloudSer).forEach(k => delete cloudSer[k]); Object.keys(cloudSig).forEach(k => delete cloudSig[k]); cloudDirty.clear();
-  $('#acctBtn').textContent = user ? (user.name || user.email || 'Account').slice(0, 14) : 'Login';
-  if (user) { closeAcct(); try { await pullCloud(); } catch (e) { syncStatus = 'Could not load your cloud data.'; } }
-  refreshViews(); if (cur === 'fno') renderFno(false);
-  renderAcct();
-}
-async function pullCloud() {
-  const {Fs, db} = fb, uid = user.uid;
-  const snap = await Fs.getDocs(Fs.query(Fs.collection(db, 'users', uid, 'days'), Fs.orderBy('date', 'desc'), Fs.limit(30)));
-  const remote = [];
-  snap.forEach(d => { const x = d.data(); if (x && Array.isArray(x.trades)) remote.push(...x.trades); });
-  const local = loadTrades(), merged = mergeTrades(local, remote);
-  saveTrades(merged);                                   // marks days dirty where local differs, so newer local data is pushed
-  const me = await Fs.getDoc(Fs.doc(db, 'users', uid));
-  const s = me.exists() ? me.data().settings : null;
-  if (s && typeof s === 'object') {
-    if (Number.isFinite(s.lev) && s.lev >= 1 && s.lev <= 30) st.lev = s.lev;
-    if (SIDES.some(x => x[1] === s.side)) st.side = s.side;
-    if (GRADES.some(x => x[1] === s.grade)) st.grade = s.grade;
-    if (typeof s.live === 'boolean') st.live = s.live;
-    save();
-  }
-  syncStatus = 'Loaded ' + remote.length + ' saved signals from your account.';
-}
-async function pushCloud() {
-  if (!fb || !user || !cloudDirty.size) return;
-  const dates = [...cloudDirty]; cloudDirty.clear(); lastPush = Date.now();
-  const {Fs, db} = fb, trades = loadTrades();
-  try {
-    for (const d of dates) await Fs.setDoc(Fs.doc(db, 'users', user.uid, 'days', d), {date: d, trades: trades.filter(t => t.date === d), updatedAt: Date.now()});
-    await Fs.setDoc(Fs.doc(db, 'users', user.uid), {settings: {lev: st.lev, side: st.side, grade: st.grade, live: st.live}, updatedAt: Date.now()}, {merge: true});
-    syncStatus = 'Saved to your account at ' + hhmm(Date.now()) + ' IST.';
-  } catch (e) {
-    dates.forEach(d => cloudDirty.add(d));
-    syncStatus = 'Cloud save failed, will retry. (' + (e && e.code ? e.code : 'network') + ')';
-  }
-  if (!$('#acct').hidden) renderAcct();
-}
-function cloudFlush() { if (user && cloudDirty.size) pushCloud(); }
-// Save to the cloud right away after an event (entry, target, stop, new signal), otherwise at most every 2 minutes.
-setInterval(() => { if (user && fb && cloudDirty.size && (cloudUrgent || Date.now() - lastPush > 120000)) { cloudUrgent = false; pushCloud(); } }, 5000);
-
-const authMsg = e => ({
-  'auth/invalid-credential': 'Wrong email or password.', 'auth/wrong-password': 'Wrong email or password.', 'auth/user-not-found': 'No account with that email. Tap Create account.',
-  'auth/email-already-in-use': 'That email already has an account. Tap Sign in.', 'auth/weak-password': 'Use a password with at least 6 characters.',
-  'auth/invalid-email': 'That email address does not look right.', 'auth/popup-closed-by-user': 'The Google window was closed.', 'auth/network-request-failed': 'Network problem. Check your connection.',
-  'auth/too-many-requests': 'Too many attempts. Wait a few minutes and try again.', 'auth/unauthorized-domain': 'This website address is not authorised in the Firebase project yet.',
-  'auth/operation-not-allowed': 'This sign-in method is not enabled in the Firebase project yet.'
-}[e && e.code] || ('Something went wrong' + (e && e.code ? ' (' + e.code + ')' : '') + '.'));
-
-function openAcct() { $('#acct').hidden = false; renderAcct(); }
-function closeAcct() { $('#acct').hidden = true; }
-function renderAcct() {
-  const b = $('#acctBody');
-  const head = '<button class="btn x" data-a="close" type="button">Close</button>';
-  if (!cloudOn()) { b.innerHTML = head + '<h2>Guest mode</h2><p class="hint">Login is not enabled on this site yet. Your signals and results are saved on this device only.</p>'; return; }
-  if (cloudErr && !fb) { b.innerHTML = head + '<h2>Login unavailable</h2><p class="hint err">' + esc(cloudErr) + '</p>'; return; }
-  if (!fb) { b.innerHTML = head + '<h2>Login</h2><p class="hint">Loading...</p>'; return; }
-  if (user) {
-    b.innerHTML = head + '<h2>Signed in</h2><p style="margin:0 0 6px">' + esc(user.email || user.name) + '</p>'
-      + '<p class="hint">' + esc(syncStatus || 'Your signals and results are saved to your account.') + '</p>'
-      + '<div class="btns"><button class="btn" data-a="sync" type="button">Sync now</button><button class="btn" data-a="out" type="button">Sign out</button></div>'
-      + '<p class="hint">Each person sees only their own data. Signing out switches this device back to guest data.</p>';
-    return;
-  }
-  b.innerHTML = head + '<h2>Login to Stranger</h2><p class="hint">Save your signals, results and accuracy to your account and see them on any device.</p>'
-    + '<input id="aEm" type="email" autocomplete="email" placeholder="Email" aria-label="Email"><input id="aPw" type="password" autocomplete="current-password" placeholder="Password (6+ characters)" aria-label="Password">'
-    + '<p class="hint err" id="aErr" role="alert" hidden></p>'
-    + '<div class="btns"><button class="btn p" data-a="in" type="button">Sign in</button><button class="btn" data-a="up" type="button">Create account</button><button class="btn" data-a="g" type="button">Continue with Google</button></div>'
-    + '<button class="chip sm" data-a="reset" type="button">Forgot password?</button>'
-    + '<p class="hint" style="margin-top:12px">We store your email and your signal history in this site\'s Firebase project. Guest mode keeps data on your device only.</p>';
-}
-$('#acctBtn').onclick = openAcct;
-$('#acct').addEventListener('click', async e => {
-  if (e.target === $('#acct')) return closeAcct();
-  const a = e.target.closest('[data-a]');
-  if (!a) return;
-  const act = a.dataset.a;
-  if (act === 'close') return closeAcct();
-  if (!fb) return;
-  const err = $('#aErr'), setErr = (m, ok) => { if (err) { err.hidden = !m; err.className = 'hint ' + (ok ? 'u' : 'err'); err.textContent = m || ''; } };
-  a.disabled = true;
-  try {
-    if (act === 'in' || act === 'up') {
-      const em = $('#aEm').value.trim(), pw = $('#aPw').value;
-      if (!em || !pw) { setErr('Enter your email and password.'); return; }
-      setErr('');
-      await (act === 'in' ? fb.Au.signInWithEmailAndPassword(fb.auth, em, pw) : fb.Au.createUserWithEmailAndPassword(fb.auth, em, pw));
-    } else if (act === 'g') await fb.Au.signInWithPopup(fb.auth, new fb.Au.GoogleAuthProvider());
-    else if (act === 'reset') {
-      const em = $('#aEm').value.trim();
-      if (!em) { setErr('Type your email first, then tap Forgot password.'); return; }
-      await fb.Au.sendPasswordResetEmail(fb.auth, em); setErr('Reset email sent. Check your inbox.', true);
-    } else if (act === 'out') await fb.Au.signOut(fb.auth);
-    else if (act === 'sync') { await pullCloud(); Object.keys(cloudSer).forEach(k => delete cloudSer[k]); saveTrades(loadTrades()); await pushCloud(); refreshViews(); renderAcct(); }
-  } catch (ex) { setErr(authMsg(ex)); }
-  finally { a.disabled = false; }
-});
+$('#trClear').onclick = () => { if (confirm('Delete all saved signals and results on this device?')) { saveTrades([]); renderTrack(); renderFno(false); } };
 
 // ---------- market pill ----------
 function updateMkt() {
@@ -1114,17 +760,16 @@ $('#f').onsubmit = e => {
   }
   err.hidden = true;
   st.sym = normSym(v); save();
-  drawn.analyze = 0;
+  drawn.analyze = drawn.chart = 0;
   show(cur, true);
   $('#q').blur();
 };
 
 // ---------- nav + start ----------
-const DRAW = {scan: drawScan, fno: drawFno, live: drawLive, track: drawTrack, analyze: drawAnalyze};
+const DRAW = {scan: drawScan, fno: drawFno, track: drawTrack, analyze: drawAnalyze, chart: drawChart};
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => show(b.dataset.t));
 const h = location.hash.slice(1);
 show(DRAW[h] ? h : 'scan');
-initCloud();
 </script>
 </body>
 </html>
