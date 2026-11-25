@@ -711,7 +711,7 @@ function renderFno(stale) {
   $('#extSum').textContent = 'Extended moves, not chased (' + ext.length + ')';
   $('#extList').innerHTML = ext.map(r => `<div>${esc(r.sym)} ${sgn(r.ch)}% today, ${r.ext.toFixed(1)}x its normal daily range</div>`).join('');
   setStat('Scanned ' + (lastData ? lastData.got : 0) + ' of ' + FNO.length + ' | ' + all.length + ' locked signals | ' + (lastData || quoteAt ? istTime(quoteAt && (!lastData || quoteAt > lastData.at) ? quoteAt : lastData.at) : '-')
-    + (dhanState === 'live' ? ' | Dhan live' : dhanState === 'token' ? ' | Dhan token expired' : dhanState === 'cors' ? ' | Dhan blocked by browser, use Worker' : dhanState === 'ids' ? ' | Dhan stock list failed' : dhanState === 'error' ? ' | Dhan unreachable' : '')
+    + (fyState === 'live' ? ' | Fyers live' : fyState === 'token' ? ' | Fyers token expired' : fyState === 'cors' ? ' | Fyers blocked by browser, use Worker' : fyState === 'error' ? ' | Fyers unreachable' : '')
     + (stale ? ' | STALE: refresh failed' : '')
     + (ctx.open ? (ctx.mins >= 885 ? ' | Late session, exit by 3:15 PM' : '') : ' | Market closed'));
 }
@@ -900,65 +900,42 @@ async function quoteReq(tickers, cols, signal) {
   if (!j || !Array.isArray(j.data)) throw new Error('Unexpected response');
   return j.data;
 }
-// ---- Dhan live feed (optional, owner only). URL + key are kept in THIS browser only, never synced or committed.
-const dhanCfg = () => { const g = k => { try { return (localStorage.getItem(k) || '').trim(); } catch (e) { return ''; } };
-  return {url: g('stranger-dhan-url').replace(/\/+$/, ''), key: g('stranger-dhan-key'), cid: g('stranger-dhan-cid'), tok: g('stranger-dhan-tok')}; };
-let dhanState = 'off', dhanPause = 0;                  // off | live | token | error
-function csvLine(l) {                                  // small CSV line reader that understands "quoted, commas"
-  const o = []; let c = '', q = false;
-  for (let i = 0; i < l.length; i++) { const ch = l[i];
-    if (q) { if (ch === '"') { if (l[i + 1] === '"') { c += '"'; i++; } else q = false; } else c += ch; }
-    else if (ch === '"') q = true; else if (ch === ',') { o.push(c); c = ''; } else c += ch; }
-  o.push(c); return o;
-}
-let dhanIdsMem = null, dhanIdsBusy = null;
-async function dhanIds(signal) {                      // symbol -> Dhan securityId, fetched once and saved in this browser
-  if (dhanIdsMem) return dhanIdsMem;
-  try { const m = JSON.parse(localStorage.getItem('stranger-dhan-ids') || 'null'); if (m && Object.keys(m).length > 100) return (dhanIdsMem = m); } catch (e) {}
-  if (dhanIdsBusy) return dhanIdsBusy;
-  dhanIdsBusy = (async () => {
-    const res = await fetch('https://images.dhan.co/api-data/api-scrip-master.csv', {signal});
-    if (!res.ok) throw new Error('ids ' + res.status);
-    const lines = (await res.text()).split(/\r?\n/), h = csvLine(lines[0]).map(x => x.trim().toUpperCase());
-    const ix = n => h.findIndex(x => x.includes(n)), E = ix('EXCH_ID'), G = ix('SEGMENT'), I = ix('SECURITY_ID'), S = ix('TRADING_SYMBOL'), R = ix('SERIES');
-    if ([E, G, I, S, R].some(x => x < 0)) throw new Error('ids columns');
-    const want = new Set(FNO.concat(['NIFTY','BANKNIFTY'])), m = {};
-    for (let i = 1; i < lines.length; i++) { const l = lines[i]; if (!l.startsWith('NSE,E,')) continue;
-      const c = csvLine(l); if (c[E] === 'NSE' && c[G] === 'E' && c[R] === 'EQ' && want.has(c[S].toUpperCase())) m[c[S].toUpperCase()] = c[I].trim(); }
-    if (Object.keys(m).length < 100) throw new Error('ids few');
-    try { localStorage.setItem('stranger-dhan-ids', JSON.stringify(m)); } catch (e) {}
-    return (dhanIdsMem = m);
-  })();
-  try { return await dhanIdsBusy; } finally { dhanIdsBusy = null; }
-}
-function dhanMap(seg, ids, syms) {
+// ---- Fyers live feed (optional, owner only). App ID + token (or Worker details) are kept in THIS browser only, never synced or committed.
+const fyCfg = () => { const g = k => { try { return (localStorage.getItem(k) || '').trim(); } catch (e) { return ''; } };
+  return {app: g('stranger-fy-app'), tok: g('stranger-fy-tok'), url: g('stranger-fy-url').replace(/\/+$/, ''), key: g('stranger-fy-key')}; };
+let fyState = 'off', fyPause = 0;                      // off | live | token | cors | error
+const fyToSym = n => String(n).replace(/^NSE:/, '').replace(/-EQ$/, '');
+function fyMap(list) {
   const q = {};
-  for (const s of syms) { const d = ids[s] && seg[String(ids[s])]; if (!d || !(d.last_price > 0)) continue;
-    const o = d.ohlc || {}; q[s] = {c: d.last_price, h: o.high, l: o.low, o: o.open, pc: o.close, vwap: d.average_price}; }
+  for (const x of list || []) { const v = x && x.v; if (!v || !(v.lp > 0)) continue;
+    q[fyToSym(x.n || v.symbol)] = {c: v.lp, h: v.high_price, l: v.low_price, o: v.open_price, vwap: v.atp}; }
   return q;
 }
-async function dhanQuotes(syms, signal) {
-  const c = dhanCfg();
-  if (!(c.url && c.key) && !(c.cid && c.tok)) { dhanState = 'off'; return null; }
-  if (Date.now() < dhanPause) return null;
+async function fyQuotes(syms, signal) {
+  const c = fyCfg();
+  if (!(c.url && c.key) && !(c.app && c.tok)) { fyState = 'off'; return null; }
+  if (Date.now() < fyPause) return null;
   try {
     if (c.url && c.key) {                              // via your private Worker
       const res = await fetch(c.url + '/q?s=' + encodeURIComponent(syms.join(',')), {headers: {'x-owner-key': c.key}, signal});
       const j = await res.json().catch(() => null);
-      if (res.status === 401 || res.status === 403) { dhanState = 'error'; dhanPause = Date.now() + 60000; return null; }
-      if (!res.ok || !j || !j.ok) { dhanState = j && j.error === 'dhan_auth' ? 'token' : 'error'; dhanPause = Date.now() + 30000; return null; }
-      dhanState = 'live'; return j.q || {};
+      if (res.status === 401 || res.status === 403) { fyState = 'error'; fyPause = Date.now() + 60000; return null; }
+      if (!res.ok || !j || !j.ok) { fyState = j && j.error === 'fyers_auth' ? 'token' : 'error'; fyPause = Date.now() + 30000; return null; }
+      fyState = 'live'; return j.q || {};
     }
-    let ids;                                           // direct from this browser to Dhan
-    try { ids = await dhanIds(signal); } catch (e) { dhanState = 'ids'; dhanPause = Date.now() + 60000; return null; }
-    let res;
-    try { res = await fetch('https://api.dhan.co/v2/marketfeed/quote', {method: 'POST', headers: {'access-token': c.tok, 'client-id': c.cid, 'Content-Type': 'application/json', 'Accept': 'application/json'}, body: JSON.stringify({NSE_EQ: syms.filter(x => ids[x]).map(x => Number(ids[x]))}), signal}); }
-    catch (e) { dhanState = 'cors'; dhanPause = Date.now() + 60000; return null; }   // browser refused the call (CORS) or no network
-    if (res.status === 401 || res.status === 403) { dhanState = 'token'; dhanPause = Date.now() + 60000; return null; }
-    const j = await res.json().catch(() => null), seg = j && j.data && j.data.NSE_EQ;
-    if (!res.ok || !seg) { dhanState = 'error'; dhanPause = Date.now() + 30000; return null; }
-    dhanState = 'live'; return dhanMap(seg, ids, syms);
-  } catch (e) { dhanState = 'error'; dhanPause = Date.now() + 15000; return null; }
+    const out = {};                                    // direct from this browser to Fyers, 50 symbols per request
+    for (let i = 0; i < syms.length; i += 50) {
+      const list = syms.slice(i, i + 50).map(x => encodeURIComponent('NSE:' + x + '-EQ')).join(',');
+      let res;
+      try { res = await fetch('https://api-t1.fyers.in/data/quotes?symbols=' + list, {headers: {'Authorization': c.app + ':' + c.tok}, signal}); }
+      catch (e) { fyState = 'cors'; fyPause = Date.now() + 60000; return null; }   // browser refused the call (CORS) or no network
+      const j = await res.json().catch(() => null);
+      if (res.status === 401 || res.status === 403 || (j && j.s === 'error')) { fyState = 'token'; fyPause = Date.now() + 60000; return null; }
+      if (!res.ok || !j || !Array.isArray(j.d)) { fyState = 'error'; fyPause = Date.now() + 30000; return null; }
+      Object.assign(out, fyMap(j.d));
+    }
+    fyState = 'live'; return out;
+  } catch (e) { fyState = 'error'; fyPause = Date.now() + 15000; return null; }
 }
 async function fastPoll() {
   if (fastFlight || !st.live || Date.now() < fastPause) return;
@@ -976,14 +953,14 @@ async function fastPoll() {
       else throw e;
     }
     const px = {};
-    const dq = await dhanQuotes(syms, ctl.signal);      // owner-only live feed (null when not set up or failing)
+    const dq = await fyQuotes(syms, ctl.signal);      // owner-only live feed (null when not set up or failing)
     data.forEach(x => {
       if (!x || !x.d) return;
       const g = n => { const i = cols.indexOf(n); return i < 0 ? undefined : x.d[i]; }, s = String(x.s).split(':')[1];
       if (Number.isFinite(g('close'))) px[s] = {c: g('close'), h: g('high'), l: g('low')};
       ind[s] = Object.assign(ind[s] || {}, {r5: g('Recommend.All|5'), r15: g('Recommend.All|15'), rd: g('Recommend.All'), rsi: g('RSI|5'), macd: g('MACD.macd|5'), macds: g('MACD.signal|5'), vwap: g('VWAP')});
     });
-    if (dq) for (const k of Object.keys(dq)) {          // Dhan wins for price, day high/low and VWAP
+    if (dq) for (const k of Object.keys(dq)) {          // Fyers wins for price, day high/low and VWAP
       const d = dq[k]; if (!Number.isFinite(d.c) || d.c <= 0) continue;
       px[k] = {c: d.c, h: d.h > 0 ? d.h : d.c, l: d.l > 0 ? d.l : d.c};
       if (d.vwap > 0) ind[k] = Object.assign(ind[k] || {}, {vwap: d.vwap});
@@ -1112,16 +1089,16 @@ const authMsg = e => ({
 
 function openAcct() { $('#acct').hidden = false; renderAcct(); }
 function closeAcct() { $('#acct').hidden = true; }
-function renderAcct() { renderAcct0(); dhanSection(); }
-function dhanSection() {
-  const c = dhanCfg(), b = $('#acctBody');
-  b.insertAdjacentHTML('beforeend', '<hr style="border:0;border-top:1px solid var(--line,#333);margin:14px 0"><h3 style="margin:0 0 6px">Dhan live data (owner only)</h3>'
-    + '<p class="hint">Status: ' + ({live:'live', token:'token expired or wrong, make a new one', cors:'browser blocked the direct call, use the Worker boxes below', ids:'could not load the stock list', error:'cannot reach Dhan / wrong details', off:'not set up'}[dhanState]) + '. Everything here is saved on this browser only.</p>'
-    + '<input id="dCid" type="text" inputmode="numeric" placeholder="Dhan Client ID" aria-label="Dhan client id" value="' + esc(c.cid) + '">'
-    + '<input id="dTok" type="password" placeholder="Dhan Access Token" aria-label="Dhan access token" value="' + esc(c.tok) + '">'
+function renderAcct() { renderAcct0(); fySection(); }
+function fySection() {
+  const c = fyCfg(), b = $('#acctBody');
+  b.insertAdjacentHTML('beforeend', '<hr style="border:0;border-top:1px solid var(--line,#333);margin:14px 0"><h3 style="margin:0 0 6px">Fyers live data (owner only)</h3>'
+    + '<p class="hint">Status: ' + ({live:'live', token:'token expired (they expire daily at 6:30 AM) or the app has no Market Data permission', cors:'browser blocked the direct call, use the Worker boxes below', error:'cannot reach Fyers / wrong details', off:'not set up'}[fyState]) + '. Everything here is saved on this browser only.</p>'
+    + '<input id="fApp" type="text" placeholder="Fyers App ID (like ABCD1234-100)" aria-label="Fyers app id" value="' + esc(c.app) + '">'
+    + '<input id="fTok" type="password" placeholder="Fyers Access Token" aria-label="Fyers access token" value="' + esc(c.tok) + '">'
     + '<p class="hint">Only if the status says the browser blocked it: Worker address + owner key.</p>'
-    + '<input id="dUrl" type="url" placeholder="Worker address (optional)" aria-label="Worker address" value="' + esc(c.url) + '">'
-    + '<input id="dKey" type="password" placeholder="Owner key (optional)" aria-label="Owner key" value="' + esc(c.key) + '">'
+    + '<input id="fUrl" type="url" placeholder="Worker address (optional)" aria-label="Worker address" value="' + esc(c.url) + '">'
+    + '<input id="fKey" type="password" placeholder="Owner key (optional)" aria-label="Owner key" value="' + esc(c.key) + '">'
     + '<div class="btns"><button class="btn p" data-d="save" type="button">Save</button><button class="btn" data-d="clear" type="button">Turn off</button></div>');
 }
 function renderAcct0() {
@@ -1148,11 +1125,10 @@ $('#acctBtn').onclick = openAcct;
 $('#acct').addEventListener('click', e => {
   const d = e.target.closest('[data-d]'); if (!d) return;
   try {
-    const K = {cid:'#dCid', tok:'#dTok', url:'#dUrl', key:'#dKey'};
-    for (const k in K) { if (d.dataset.d === 'save') localStorage.setItem('stranger-dhan-' + k, $(K[k]).value.trim()); else localStorage.removeItem('stranger-dhan-' + k); }
-    if (d.dataset.d !== 'save') localStorage.removeItem('stranger-dhan-ids');
+    const K = {app:'#fApp', tok:'#fTok', url:'#fUrl', key:'#fKey'};
+    for (const k in K) { if (d.dataset.d === 'save') localStorage.setItem('stranger-fy-' + k, $(K[k]).value.trim()); else localStorage.removeItem('stranger-fy-' + k); }
   } catch (x) {}
-  dhanState = 'off'; dhanPause = 0; renderAcct(); fastPoll();
+  fyState = 'off'; fyPause = 0; renderAcct(); fastPoll();
 });
 $('#acct').addEventListener('click', async e => {
   if (e.target === $('#acct')) return closeAcct();
