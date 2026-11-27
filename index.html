@@ -316,14 +316,18 @@ nav button.on{color:#fff;box-shadow:inset 0 3px 0 var(--bl)}nav button.on svg{co
   <details class="box pad" id="fnoSet">
     <summary>Risk and rule settings</summary>
     <div class="set" style="margin-top:10px"><label for="sCap">Capital &#8377;</label><input class="n" id="sCap" data-k="cap" type="number" min="1000" step="1000" inputmode="numeric"><label for="sRisk">Risk per trade %</label><input id="sRisk" data-k="riskPct" type="number" min="0.1" max="10" step="0.1" inputmode="decimal"></div>
-    <div class="set"><label for="sDelta">Option delta</label><input id="sDelta" data-k="delta" type="number" min="0.1" max="1" step="0.05" inputmode="decimal"><label for="sCost">Costs, % of premium (round trip)</label><input id="sCost" data-k="cost" type="number" min="0" max="20" step="0.1" inputmode="decimal"></div>
-    <div class="set"><label for="sMaxDay">Max signals per day</label><input id="sMaxDay" data-k="maxDay" type="number" min="1" max="30" step="1" inputmode="numeric"><label for="sMaxOpen">Max open at once</label><input id="sMaxOpen" data-k="maxOpen" type="number" min="1" max="30" step="1" inputmode="numeric"></div>
+    <div class="set"><label for="sDelta">Option delta</label><input id="sDelta" data-k="delta" type="number" min="0.1" max="1" step="0.05" inputmode="decimal"><label for="sCost">Costs, % of premium (round trip)</label><input id="sCost" data-k="cost" type="number" min="0" max="20" step="0.1" inputmode="decimal"><label for="sSlip">Slippage &amp; costs (R)</label><input id="sSlip" data-k="slipR" type="number" min="0" max="1" step="0.05" inputmode="decimal"></div>
+    <div class="set"><label for="sMaxDay">Max signals per day (Top 5)</label><input id="sMaxDay" data-k="maxDay" type="number" min="1" max="5" step="1" inputmode="numeric"><label for="sMaxOpen">Max open at once</label><input id="sMaxOpen" data-k="maxOpen" type="number" min="1" max="5" step="1" inputmode="numeric"></div>
     <div class="set"><label for="sLoss">Stop for the day after</label><input id="sLoss" data-k="lossStops" type="number" min="1" max="10" step="1" inputmode="numeric"><span>stop-losses, or that many R lost</span></div>
-    <div class="set"><label><input type="checkbox" data-k="allowB"> Allow Grade B signals</label><label><input type="checkbox" data-k="event"> Event / expiry day (A grade only)</label></div>
+    <div class="set"><label><input type="checkbox" data-k="allowB"> Allow Grade B signals</label><label><input type="checkbox" data-k="event"> Event / expiry day (A grade only)</label><label><input type="checkbox" data-k="secCap"> Max 1 active trade per sector</label><label><input type="checkbox" data-k="mktAlign"> Block signals against NIFTY bias</label></div>
     <div class="set"><label for="sBan">Ban / skip list</label><input class="w" id="sBan" data-k="ban" type="text" maxlength="1500" placeholder="e.g. RBLBANK, IDEA (F&amp;O ban, results today)" autocapitalize="characters"></div>
     <div class="set"><label for="sHol">NSE holidays</label><input class="w" id="sHol" data-k="hol" type="text" maxlength="1500" placeholder="YYYY-MM-DD, comma separated"></div>
     <p class="hint" style="margin:0">Changes apply to new signals only. Signals already locked keep their levels.</p>
   </details>
+  <div class="box pad" id="idxBox" hidden>
+    <div class="dh" style="margin-bottom:8px"><b>Index Signal (NIFTY / SENSEX &middot; 1 OTM)</b><span class="mu">Max 1/day &middot; ADX/EMA/RSI + Breadth &middot; Separate from Top 5 stocks</span></div>
+    <div id="idxList"></div>
+  </div>
   <p class="hint" id="fnoMsg" hidden></p>
   <div id="fnoList"></div>
   <p class="hint" id="fnoTap" hidden>Tap a signal to open its details: entry, stop, targets, running price, P/L and hold / book / exit confirmations.</p>
@@ -334,15 +338,17 @@ nav button.on{color:#fff;box-shadow:inset 0 3px 0 var(--bl)}nav button.on svg{co
     <ul>
       <li><b>Timing:</b> no signal is created before <b>9:30 AM IST</b> or after <b>2:30 PM</b>. Between 11:30 AM and 1:30 PM (lunch chop) only Grade A signals are created. Every trade is squared off at <b>3:15 PM</b>.</li>
       <li><b>Locked:</b> a signal's Entry, Stop and Targets are saved with the time and never change on refresh. Each stock gets at most one signal per day.</li>
-      <li><b>Direction check:</b> a call (CE) needs Daily and 15m ratings bullish, 5m not bearish, the stock above its day open, up on the day and above VWAP. A put (PE) is the mirror image.</li>
-      <li><b>Market filter:</b> NIFTY (via NIFTYBEES) above its open and VWAP and up on the day = bullish; the mirror = bearish. If NIFTYBEES is missing, F&amp;O breadth is used (60%+ up = bullish, 40% or less = bearish). CE signals are blocked in a bearish market, PE signals in a bullish one. India VIX 20 or higher = A grade only.</li>
-      <li><b>Relative strength:</b> a CE stock must be up more than NIFTY and more than the average of its sector today. A PE stock must be weaker than both.</li>
-      <li><b>Daily limits:</b> at most the daily cap of signals (default 5), at most the set number open or waiting at once (default 3), and no new signals after the loss limit (default 2 stop-losses or -2R). Grade A only by default; Grade C is never signalled.</li>
-      <li><b>Entry:</b> the trade starts only when the stock trades through Entry <i>and</i> is on the right side of VWAP. If price is already more than 0.2 ATR past Entry when first seen, it is marked "Missed, did not chase". If Entry is not reached within 90 minutes, the signal expires.</li>
-      <li><b>Stop:</b> 0.4 ATR beyond entry. When VWAP sits 0.3 to 0.6 ATR behind entry, the stop goes just beyond VWAP instead. A stock more than 0.8 ATR away from VWAP is too stretched and is not signalled. Signals risking over 2% on the stock are skipped.</li>
-      <li><b>Targets and exits:</b> T1 = 1.5R, T2 = 2.5R. At T1, half is booked and the stop on the rest moves to entry. If T1 is not reached within 60 minutes of entry, it is a time-stop exit. Scorecard: stop = -1R, T1 then back to entry = +0.75R, T2 = +2R, time stop and square-off = the R at that price.</li>
-      <li><b>Strike and size:</b> one strike in the money is suggested (it decays less than ATM). Quantity = (capital x risk %) / (delta x stop distance). Divide by the lot size from your broker to get lots. Option % is still an estimate (stock % x leverage), not real premium.</li>
-      <li><b>Grade</b> adds one point each for: strong combined rating, volume 1.5x or more, 5m agreeing, move not stretched, price near the trigger. A = 4+, B = 3, C = fewer.</li>
+      <li><b>Early-momentum check:</b> scans all NSE F&amp;O stocks for fresh momentum. A call (CE) needs both 5m and 15m ratings clearly bullish (&ge; 0.2, avg &ge; 0.3), Daily not bearish, mandatory institutional volume (&ge; 1.3x normal), price above open, up on the day, above VWAP, and tight near the breakout high (&le; 0.6%). A put (PE) is the mirror image.</li>
+      <li><b>Fuel &amp; stretch caps:</b> stocks that have already moved more than <b>1.0x daily ATR</b> or sit more than <b>0.5 ATR</b> away from VWAP are skipped so you do not enter after momentum is exhausted.</li>
+      <li><b>Top 5 &amp; Market filter:</b> strictly capped at the <b>Top 5</b> highest-ranked stocks per day in any CE/PE mix (e.g. 1 CE + 4 PE or 3 CE + 2 PE). Counter-trend picks against NIFTY bias must be exceptional (Grade A + &ge; 1.8x volume), or you can block them completely in settings. India VIX 20+ = A grade only.</li>
+      <li><b>Relative strength &amp; sector cap:</b> a CE stock must beat both NIFTY and its sector average today (mirror for PE). With Sector Cap on (default), at most 1 active trade per sector is allowed at a time.</li>
+      <li><b>Daily limits:</b> strictly capped at <b>5 signals per day</b>, max 3 open/waiting at once, and automatic stop after 2 stop-losses or -2R closed. Grade A only by default; Grade C is never signalled.</li>
+      <li><b>Entry:</b> starts only when the stock trades through Entry <i>and</i> is on the right side of VWAP. If price is already &gt; 0.2 ATR past Entry when first seen, it is marked "Missed, did not chase". Expires after 90 minutes.</li>
+      <li><b>Stop:</b> <b>0.7 ATR</b> beyond entry so normal noise does not shake you out. When VWAP sits 0.4 to 0.9 ATR behind entry, the stop goes just beyond VWAP instead. Signals risking over 3% on the stock are skipped.</li>
+      <li><b>Targets and exits:</b> T1 = 1.5R, T2 = 2.5R. Original stop stays intact until T1 is hit; at T1, half is booked and the stop on the rest moves to breakeven. Time stop after 60 minutes if T1 is not reached. Scorecard deducts your slippage/cost setting (default 0.20R) from closed trades.</li>
+      <li><b>Index signals (NIFTY / SENSEX only):</b> tracked separately from the Top 5 F&amp;O stocks (max 1 index trade/day to avoid doubling correlated risk). Requires <b>ADX(14) 5m &ge; 20</b>, <b>EMA 10/20 5m</b> trend stack, <b>RSI 5m</b> in momentum zone (55–72 CE / 28–45 PE), <b>F&amp;O breadth</b> (&ge; 60% CE / &le; 40% PE), Bank Nifty not opposing, and India VIX &ge; 11.5. Uses <b>0.4 ATR</b> stop, <b>1.0R / 1.8R</b> targets, <b>30-min</b> time-stop, <b>1 OTM strike</b> (50-pt NIFTY, 100-pt SENSEX), and blocks new afternoon entries after 1:30 PM on expiry day (Tue NIFTY, Thu SENSEX).</li>
+      <li><b>Strike and size:</b> stocks suggest 1 strike ITM (less decay than ATM); NIFTY &amp; SENSEX suggest <b>1 strike OTM</b>. Quantity = (capital x risk %) / (delta x stop distance). Divide by the lot size from your broker to get lots. Always verify the option bid-ask spread in your broker app before entering.</li>
+      <li><b>Grade</b> adds one point each for: strong 5m+15m momentum (&ge; 0.5), high volume (&ge; 1.8x), Daily agreeing, fresh move (&le; 0.75 ATR), and tight at trigger (&le; 0.25%). A = 4+, B = 3, C = fewer.</li>
     </ul>
   </details>
 </section>
@@ -356,7 +362,7 @@ nav button.on{color:#fff;box-shadow:inset 0 3px 0 var(--bl)}nav button.on svg{co
       <li>Each running trade is checked against live indicators: 5m and 15m TradingView ratings, price versus VWAP, MACD (5m), RSI (5m), and how much of the peak profit has been given back.</li>
       <li>Each indicator supports your direction (+), opposes it (-) or is neutral. The count of supporting indicators is the <b>confirmation score</b>. It is a checklist, <b>not a probability</b>.</li>
       <li><b>HOLD</b>: profit or plan intact and most confirmations support it. <b>BOOK PROFIT</b>: profit exists but momentum is fading, price gave back a lot, RSI is stretched, or Target 1 is reached without strong support. <b>EXIT NOW</b>: price is at the stop, or confirmations have turned against a trade that is not in profit.</li>
-      <li><b>Suggested trailing stop:</b> original stop first. After half the distance to Target 1, move it to entry. After Target 1, it locks about 70% of the Target 1 profit.</li>
+      <li><b>Suggested trailing stop:</b> original stop stays intact until Target 1 (1.5R) is actually reached (no premature breakeven move that chokes winners). After Target 1, half is booked and the stop on the rest moves to entry (breakeven).</li>
       <li>If VWAP, MACD or RSI are missing, the check uses fewer indicators. These are rules of thumb, not guarantees, and indicators lag fast reversals.</li>
     </ul>
   </details>
@@ -367,10 +373,10 @@ nav button.on{color:#fff;box-shadow:inset 0 3px 0 var(--bl)}nav button.on svg{co
   <div class="box pad">
     <b>Accuracy so far</b>
     <div id="trStats"></div>
-    <p class="hint" style="margin-top:8px"><b>Direction accuracy</b> = signals where the close ended on the signalled side of the signal price (counts every locked signal, even if entry never triggered). <b>Win rate</b> = triggered trades that hit Target 1, or closed in profit. 1R = the risk to the stop. Prices are sampled while this page is open, plus the day's high, low and close fetched after the close. When Stop and Target 1 both fall in the day's range and the order is unknown, it is scored as a loss. Paper results ignore slippage and brokerage. Keep the page open, or open it after 3:30 PM, so results are filled in.</p>
+    <p class="hint" style="margin-top:8px"><b>Direction accuracy</b> = signals where the close ended on the signalled side of the signal price (counts every locked signal, even if entry never triggered). <b>Win rate</b> = triggered trades that closed in net profit after the slippage &amp; costs haircut (default 0.20R, editable in Signals &rarr; Risk settings). 1R = the risk to the stop. Prices are sampled while this page is open, plus the day's high, low and close fetched after the close. When Stop and Target 1 both fall in the day's range and the order is unknown, it is scored as a loss. Keep the page open, or open it after 3:30 PM, so results are filled in.</p>
   </div>
   <div class="box pad"><b>Signal history</b><div id="trList"></div></div>
-  <button class="chip" id="trClear" type="button">Clear history</button>
+  <div class="btns"><button class="chip" id="trExport" type="button">Export CSV</button><button class="chip" id="trClear" type="button">Clear history</button></div>
 </section>
 
 <section id="analyze">
@@ -429,12 +435,17 @@ const GRADES = [['A + B','ab'],['All grades','all']];
 const FNO = ['360ONE','ABB','ABCAPITAL','ADANIENSOL','ADANIENT','ADANIGREEN','ADANIPORTS','ADANIPOWER','ALKEM','AMBER','AMBUJACEM','ANANDRATHI','ANGELONE','APLAPOLLO','APOLLOHOSP','ASHOKLEY','ASIANPAINT','ASTRAL','ATHERENERG','AUBANK','AUROPHARMA','AXISBANK','BAJAJ-AUTO','BAJAJFINSV','BAJFINANCE','BANDHANBNK','BANKBARODA','BANKINDIA','BDL','BEL','BHARATFORG','BHARTIARTL','BHEL','BIOCON','BLUESTARCO','BOSCHLTD','BPCL','BRITANNIA','BSE','CAMS','CANBK','CDSL','CGPOWER','CHOLAFIN','CIPLA','COALINDIA','COCHINSHIP','COFORGE','COLPAL','CONCOR','CROMPTON','CUMMINSIND','DABUR','DELHIVERY','DIVISLAB','DIXON','DLF','DMART','DRREDDY','EICHERMOT','ENRIN','ETERNAL','FEDERALBNK','FORCEMOT','FORTIS','GAIL','GLENMARK','GMRAIRPORT','GODFRYPHLP','GODREJCP','GODREJPROP','GRASIM','GVT&D','HAL','HAVELLS','HCLTECH','HDFCAMC','HDFCBANK','HDFCLIFE','HEROMOTOCO','HINDALCO','HINDPETRO','HINDUNILVR','HINDZINC','HYUNDAI','ICICIBANK','ICICIGI','ICICIPRULI','IDEA','IDFCFIRSTB','INDHOTEL','INDIANB','INDIGO','INDUSINDBK','INDUSTOWER','INFY','INOXWIND','IOC','IRFC','ITC','JINDALSTEL','JIOFIN','JSWENERGY','JSWSTEEL','JUBLFOOD','KALYANKJIL','KAYNES','KEI','KFINTECH','KOTAKBANK','KPITTECH','LAURUSLABS','LICHSGFIN','LICI','LODHA','LT','LTF','LTM','LUPIN','M&M','MAHABANK','MANAPPURAM','MANKIND','MARICO','MARUTI','MAXHEALTH','MAZDOCK','MCX','MFSL','MOTHERSON','MOTILALOFS','MPHASIS','MUTHOOTFIN','NAM-INDIA','NATIONALUM','NAUKRI','NBCC','NESTLEIND','NHPC','NMDC','NTPC','NYKAA','OBEROIRLTY','OFSS','OIL','ONGC','PAGEIND','PATANJALI','PAYTM','PERSISTENT','PETRONET','PFC','PGEL','PHOENIXLTD','PIDILITIND','PIIND','PNB','PNBHOUSING','POLICYBZR','POLYCAB','POWERGRID','POWERINDIA','PREMIERENE','PRESTIGE','RADICO','RBLBANK','RECLTD','RELIANCE','RVNL','SAGILITY','SAIL','SBICARD','SBILIFE','SBIN','SHREECEM','SHRIRAMFIN','SIEMENS','SOLARINDS','SONACOMS','SRF','SUNPHARMA','SUPREMEIND','SUZLON','SWIGGY','TATACONSUM','TATAELXSI','TATAPOWER','TATASTEEL','TCS','TECHM','TIINDIA','TITAN','TMPV','TORNTPHARM','TRENT','TVSMOTOR','UJJIVANSFB','ULTRACEMCO','UNIONBANK','UNITDSPR','UNOMINDA','UPL','VBL','VEDL','VMM','VOLTAS','WAAREEENER','WIPRO','YESBANK','ZYDUSLIFE','COROMANDEL','CUB','DATAPATTNS','KARURVYSYA','NAVINFLUOR','SYRMA'];
 
 /*PURE*/
-const CFG = {slAtr:0.4, t1Atr:0.6, t2Atr:1.0, minScore:0.2, extX:2,
-  rr1:1.5, rr2:2.5, vwapMaxAtr:0.8, maxRiskPct:2, chaseAtr:0.2, expiryMin:90, timeStopMin:60, sqMins:915,
+const CFG = {slAtr:0.7, vwapStopMin:0.4, vwapStopMax:0.9, t1Atr:1.05, t2Atr:1.75, minScore:0.3, minRelVol:1.3, maxAwayPct:0.6, extX:1.0,
+  rr1:1.5, rr2:2.5, vwapMaxAtr:0.5, maxRiskPct:3, chaseAtr:0.2, expiryMin:90, timeStopMin:60, sqMins:915,
   lunch:[690, 810], vixHigh:20};
 const PROXY = ['NSE:NIFTYBEES', 'NSE:BANKBEES', 'NSE:INDIAVIX'];   // market context rows sent with the F&O scan
+const IDX_TICKERS = ['NSE:NIFTY', 'BSE:SENSEX'];                   // index signals (separate from Top 5 F&O stocks)
+const IDX_IND_COLS = ['ADX|5', 'EMA10|5', 'EMA20|5', 'RSI|5'];     // index-only indicators (TradingView uses EMA10/EMA20)
+const IDX_CFG = {slAtr:0.4, vwapStopMin:0.25, vwapStopMax:0.55, rr1:1.0, rr2:1.8, timeStopMin:30,
+  adxMin:20, rsiLo:55, rsiHi:72, vixMin:11.5, breadthUp:60, breadthDn:40, expCutoffMins:810};
+const isIdxSym = s => s === 'NIFTY' || s === 'SENSEX';
 const FINAL = new Set(['SL', 'T2', 'T1BE', 'TIME', 'MISS', 'EXP']);  // v2 results that close a signal
-const SIG_START = 570, SIG_END = 870, FIN_MINS = 940, MAX_DAY = 30;   // minutes after midnight IST: 9:30, 14:30, 15:40
+const SIG_START = 570, SIG_END = 870, FIN_MINS = 940, MAX_DAY = 5;    // minutes after midnight IST: 9:30, 14:30, 15:40; strict Top 5/day
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const normSym = raw => {
   const s = String(raw || '').trim().toUpperCase().replace(/\s+/g, '');
@@ -447,8 +458,9 @@ const full = sym => {
   if (s.includes(':')) return s;
   return s === 'SENSEX' ? 'BSE:SENSEX' : 'NSE:' + s;
 };
-const stepOf = p => p < 100 ? 2.5 : p < 250 ? 5 : p < 1000 ? 10 : p < 2500 ? 20 : p < 5000 ? 50 : 100;
-const atm = p => { const s = stepOf(p); return Math.round(p / s) * s; };
+const stepOf = (p, sym) => sym === 'NIFTY' ? 50 : sym === 'SENSEX' ? 100 : (p < 100 ? 2.5 : p < 250 ? 5 : p < 1000 ? 10 : p < 2500 ? 20 : p < 5000 ? 50 : 100);
+const atm = (p, sym) => { const s = stepOf(p, sym); return Math.round(p / s) * s; };
+const otm = (p, up, sym) => { const s = stepOf(p, sym), a = atm(p, sym); return up ? a + s : a - s; };   // one strike out of the money
 const tick = x => Math.round(x * 20) / 20;
 const sigLabel = v => v >= 0.5 ? 'Strong buy' : v >= 0.1 ? 'Buy' : v > -0.1 ? 'Neutral' : v > -0.5 ? 'Sell' : 'Strong sell';
 
@@ -459,14 +471,15 @@ function buildSetups(data, cfg) {
   cfg = cfg || CFG;
   const out = [];
   for (const x of data) {
-    if (!x || !x.d || PROXY.includes(x.s)) continue;
+    if (!x || !x.d || PROXY.includes(x.s) || IDX_TICKERS.includes(x.s)) continue;
     const [c, ch, h, l, rd, r15, r5, atr, rv, o, sector, vwap] = x.d;
     if (![c, h, l, atr].every(Number.isFinite) || atr <= 0 || c <= 0) continue;
     const d = rd || 0, m = r15 || 0, f = r5 || 0;
-    const sc = (d + m) / 2;
+    const sc = (f + m) / 2;
     if (Math.abs(sc) < cfg.minScore) continue;
-    if (Math.sign(d) !== Math.sign(m)) continue;          // Daily and 15m must agree
-    if (Math.sign(f) === -Math.sign(sc)) continue;        // 5m must not oppose
+    if (Math.sign(f) !== Math.sign(m) || Math.abs(f) < 0.2 || Math.abs(m) < 0.2) continue; // 5m and 15m must both strongly agree
+    if (Math.sign(d) === -Math.sign(sc) && Math.abs(d) >= 0.1) continue;                    // Daily must not oppose
+    if ((rv || 0) < cfg.minRelVol) continue;                                                // mandatory institutional volume expansion
     const up = sc > 0, k = up ? 1 : -1;
     if (Number.isFinite(o) && k * (c - o) <= 0) continue; // price must be on the signalled side of today's open
     if (k * (ch || 0) <= 0) continue;                     // and on the signalled side of yesterday's close
@@ -475,7 +488,7 @@ function buildSetups(data, cfg) {
     if (vw !== null && k * (c - vw) <= 0) continue;       // price must be on the signalled side of VWAP
     const dv = vw !== null ? k * (e - vw) : null;         // distance from entry back to VWAP
     let risk = cfg.slAtr * atr;
-    if (dv !== null && dv >= 0.3 * atr && dv <= 0.6 * atr) risk = dv + 0.05 * atr;   // stop just beyond VWAP
+    if (dv !== null && dv >= cfg.vwapStopMin * atr && dv <= cfg.vwapStopMax * atr) risk = dv + 0.05 * atr;   // stop just beyond VWAP
     const sl = e - k * risk;
     const t1 = e + k * cfg.rr1 * risk, t2 = e + k * cfg.rr2 * risk;
     const riskPct = risk / e * 100;
@@ -484,12 +497,13 @@ function buildSetups(data, cfg) {
     const ext = Math.abs(ch || 0) / atrPct;               // today's move in units of normal daily range
     const vwFar = dv !== null && dv > cfg.vwapMaxAtr * atr;
     const away = Math.abs(e - c) / c * 100;
+    if (away > cfg.maxAwayPct) continue;                  // price must stay tight near the breakout level
     let pts = 0;
     if (Math.abs(sc) >= 0.5) pts++;
-    if ((rv || 0) >= 1.5) pts++;
-    if (Math.sign(f) === Math.sign(sc)) pts++;
-    if (ext <= 1.5) pts++;
-    if (away <= 0.3) pts++;
+    if ((rv || 0) >= 1.8) pts++;
+    if (Math.sign(d) === Math.sign(sc) && Math.abs(d) >= 0.1) pts++;
+    if (ext <= 0.75) pts++;
+    if (away <= 0.25) pts++;
     out.push({
       sym: String(x.s).split(':')[1], c, h, l, o, ch: ch || 0, d, m, f, rv, up, e, sl, t1, t2, atr, atrPct, ext,
       sector: typeof sector === 'string' ? sector : '', vwap: vw, vwFar, dvAtr: dv !== null ? dv / atr : null,
@@ -499,7 +513,81 @@ function buildSetups(data, cfg) {
       p1: Math.abs(t1 - e) / e * 100, p2: Math.abs(t2 - e) / e * 100,
       rr1: cfg.rr1, rr2: cfg.rr2,
       away,
-      rank: pts + Math.abs(sc) + 0.1 * Math.min(rv || 0, 3)
+      rank: pts * 2 + Math.abs(sc) * 2 + 0.25 * Math.min(rv || 0, 4) - 0.3 * ext - 0.5 * away
+    });
+  }
+  return out.sort((a, b) => b.rank - a.rank);
+}
+
+// Separate index-specific builder for NIFTY and SENSEX (does NOT affect Top 5 F&O stocks).
+// Rules: 0.4 ATR SL, 1.0R/1.8R targets, 30m time-stop, ADX>=20, EMA10/EMA20 stack, RSI sweet spot,
+// F&O breadth (>=60% CE / <=40% PE), Bank Nifty agreement, VIX >= 11.5, and expiry-day 1:30 PM cutoff.
+function buildIndexSetups(data, mkt, idxInd, now, cfg) {
+  cfg = cfg || CFG;
+  const ic = IDX_CFG, out = [];
+  if (mkt && mkt.vix && Number.isFinite(mkt.vix.c) && mkt.vix.c < ic.vixMin) return out; // low-VIX option-seller chop
+  const dt = now || new Date();
+  const wk = new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Kolkata', weekday:'short'}).format(dt);
+  const mins = marketState(dt).mins;
+  for (const x of data) {
+    if (!x || !x.d || !IDX_TICKERS.includes(x.s)) continue;
+    const sym = String(x.s).split(':')[1];
+    // Expiry-day afternoon theta guard: NIFTY = Tue, SENSEX = Thu
+    if (((sym === 'NIFTY' && wk === 'Tue') || (sym === 'SENSEX' && wk === 'Thu')) && mins >= ic.expCutoffMins) continue;
+    const [c, ch, h, l, rd, r15, r5, atr, , o, , vwap] = x.d;
+    if (![c, h, l, atr].every(Number.isFinite) || atr <= 0 || c <= 0) continue;
+    const d = rd || 0, m = r15 || 0, f = r5 || 0;
+    const sc = (f + m) / 2;
+    if (Math.abs(sc) < cfg.minScore) continue;
+    if (Math.sign(f) !== Math.sign(m) || Math.abs(f) < 0.2 || Math.abs(m) < 0.2) continue;
+    if (Math.sign(d) === -Math.sign(sc) && Math.abs(d) >= 0.1) continue;
+    const up = sc > 0, k = up ? 1 : -1;
+    if (Number.isFinite(o) && k * (c - o) <= 0) continue;
+    if (k * (ch || 0) <= 0) continue;
+    // Breadth + Bank Nifty participation check
+    if (mkt && Number.isFinite(mkt.breadth)) {
+      if (up && mkt.breadth < ic.breadthUp) continue;
+      if (!up && mkt.breadth > ic.breadthDn) continue;
+    }
+    if (mkt && mkt.bank && mkt.bank.bias === -k) continue;
+    // Institutional VWAP check via NIFTYBEES proxy if spot VWAP is missing
+    const vw = Number.isFinite(vwap) && vwap > 0 ? vwap : null;
+    if (vw !== null && k * (c - vw) <= 0) continue;
+    if (vw === null && mkt && mkt.nifty && mkt.nifty.bias === -k) continue;
+    // Index-only technical indicators: ADX(14) 5m >= 20, EMA10/EMA20 5m stack, RSI(14) 5m sweet spot
+    const ii = (idxInd && idxInd[sym]) || {};
+    if (Number.isFinite(ii.adx) && ii.adx < ic.adxMin) continue;
+    if (Number.isFinite(ii.ema10) && Number.isFinite(ii.ema20)) {
+      if (up && !(c > ii.ema10 && ii.ema10 > ii.ema20)) continue;
+      if (!up && !(c < ii.ema10 && ii.ema10 < ii.ema20)) continue;
+    }
+    if (Number.isFinite(ii.rsi)) {
+      if (up && (ii.rsi < ic.rsiLo || ii.rsi > ic.rsiHi)) continue;
+      if (!up && (ii.rsi > (100 - ic.rsiLo) || ii.rsi < (100 - ic.rsiHi))) continue;
+    }
+    const e = up ? h : l;
+    const dv = vw !== null ? k * (e - vw) : null;
+    let risk = ic.slAtr * atr;
+    if (dv !== null && dv >= ic.vwapStopMin * atr && dv <= ic.vwapStopMax * atr) risk = dv + 0.05 * atr;
+    const sl = e - k * risk;
+    const t1 = e + k * ic.rr1 * risk, t2 = e + k * ic.rr2 * risk;
+    const riskPct = risk / e * 100;
+    if (riskPct > cfg.maxRiskPct) continue;
+    const atrPct = atr / c * 100;
+    const ext = Math.abs(ch || 0) / atrPct;
+    const vwFar = dv !== null && dv > cfg.vwapMaxAtr * atr;
+    const away = Math.abs(e - c) / c * 100;
+    if (ext > cfg.extX || vwFar || away > cfg.maxAwayPct) continue;
+    let pts = 2;
+    if (Math.abs(sc) >= 0.5) pts++;
+    if (Number.isFinite(ii.adx) && ii.adx >= 25) pts++;
+    if (Math.sign(d) === Math.sign(sc) && Math.abs(d) >= 0.1) pts++;
+    out.push({
+      sym, isIdx: true, timeStopMin: ic.timeStopMin, c, h, l, o, ch: ch || 0, d, m, f, rv: 0, up, e, sl, t1, t2, atr, atrPct, ext,
+      sector: 'Index', vwap: vw, vwFar, dvAtr: dv !== null ? dv / atr : null, extended: false,
+      grade: pts >= 4 ? 'A' : 'B', pts, riskPct,
+      p1: Math.abs(t1 - e) / e * 100, p2: Math.abs(t2 - e) / e * 100, rr1: ic.rr1, rr2: ic.rr2, away,
+      rank: pts * 2 + Math.abs(sc) * 2 + (Number.isFinite(ii.adx) ? ii.adx * 0.05 : 0)
     });
   }
   return out.sort((a, b) => b.rank - a.rank);
@@ -518,7 +606,7 @@ function marketCtx(data) {
   const vix = vr && num(vr.d[0]) ? {c: vr.d[0], ch: vr.d[1] || 0} : null;
   let up = 0, n = 0; const chs = [], secL = {};
   for (const x of data) {
-    if (!x || !x.d || PROXY.includes(x.s)) continue;
+    if (!x || !x.d || PROXY.includes(x.s) || IDX_TICKERS.includes(x.s)) continue;
     const ch = x.d[1], sec = x.d[10];
     if (!num(ch)) continue;
     n++; if (ch > 0) up++; chs.push(ch);
@@ -532,7 +620,7 @@ function marketCtx(data) {
   const bias = nifty ? nifty.bias : breadth === null ? 0 : breadth >= 60 ? 1 : breadth <= 40 ? -1 : 0;
   return {nifty, bank, vix, breadth, med, sec, bias, n, src: nifty ? 'NIFTYBEES' : 'breadth'};
 }
-// Rules that decide which passing setups may become signals. opt: {allowB, aOnly, aWhy, ban:Set}
+// Rules that decide which passing setups may become signals. opt: {allowB, aOnly, aWhy, ban:Set, mktAlign, secCap, activeSectors:Set}
 function filterSetups(setups, mkt, opt) {
   const ok = [], blocked = [];
   const ref = mkt && (mkt.nifty ? mkt.nifty.ch : mkt.med);
@@ -542,9 +630,11 @@ function filterSetups(setups, mkt, opt) {
     let why = '';
     if (opt.ban && opt.ban.has(r.sym)) why = 'on your ban / skip list';
     else if (r.grade === 'B' && (!opt.allowB || opt.aOnly)) why = 'Grade B (' + (opt.aOnly ? opt.aWhy : 'B is switched off') + ')';
-    else if (mkt && mkt.bias === -k) why = (r.up ? 'CE' : 'PE') + ' against the market (' + (mkt.bias > 0 ? 'bullish' : 'bearish') + ')';
+    else if (mkt && mkt.bias === -k && opt.mktAlign) why = (r.up ? 'CE' : 'PE') + ' against the market (' + (mkt.bias > 0 ? 'bullish' : 'bearish') + ')';
+    else if (mkt && mkt.bias === -k && (r.grade !== 'A' || (r.rv || 0) < 1.8)) why = 'counter-trend ' + (r.up ? 'CE' : 'PE') + ' needs Grade A & 1.8x+ vol';
     else if (Number.isFinite(ref) && k * (r.ch - ref) <= 0) why = (r.up ? 'weaker' : 'stronger') + ' than NIFTY today';
     else if (mkt && r.sector && Number.isFinite(mkt.sec[r.sector]) && k * (r.ch - mkt.sec[r.sector]) <= 0) why = (r.up ? 'weaker' : 'stronger') + ' than its sector (' + r.sector + ')';
+    else if (opt.secCap && opt.activeSectors && r.sector && opt.activeSectors.has(r.sector)) why = 'sector cap: already active in ' + r.sector;
     if (why) blocked.push({r, why}); else ok.push(r);
   }
   return {ok, blocked};
@@ -570,7 +660,7 @@ function sessionDate(now) {
 function makeSignal(r, now) {
   now = now || new Date();
   return {v: 2, id: istDate(now) + '|' + r.sym + '|' + (r.up ? 'CE' : 'PE'), date: istDate(now), t: now.getTime(), ts: now.getTime(),
-    sym: r.sym, up: r.up, p0: r.c, hi0: r.h, lo0: r.l, e: r.e, sl: r.sl, t1: r.t1, t2: r.t2,
+    sym: r.sym, isIdx: !!r.isIdx, timeStopMin: r.timeStopMin || CFG.timeStopMin, up: r.up, p0: r.c, hi0: r.h, lo0: r.l, e: r.e, sl: r.sl, t1: r.t1, t2: r.t2,
     risk: Math.abs(r.e - r.sl), riskPct: r.riskPct, p1: r.p1, p2: r.p2, rr1: r.rr1, rr2: r.rr2,
     grade: r.grade, d: r.d, m: r.m, f: r.f, rv: r.rv || 0, atr: r.atr, vw0: r.vwap, sector: r.sector || '',
     trig: false, res: null, last: r.c, dh: r.h, dl: r.l, fin: false};
@@ -600,7 +690,7 @@ function trackUpdate(t, c, h, l, vwap, now) {
   if (!t.res) {
     if (k * (c - t.sl) <= 0) { t.res = 'SL'; t.exitPx = t.sl; return t; }
     if (k * (c - t.t1) >= 0) { t.res = 'T1'; t.t1At = now; }
-    else if (now - t.trigAt > CFG.timeStopMin * 60000) { t.res = 'TIME'; t.exitPx = c; return t; }
+    else if (now - t.trigAt > (t.timeStopMin || CFG.timeStopMin) * 60000) { t.res = 'TIME'; t.exitPx = c; return t; }
   }
   if (t.res === 'T1') {
     if (k * (c - t.t2) >= 0) { t.res = 'T2'; t.exitPx = t.t2; }
@@ -674,14 +764,15 @@ function statusOf(t, o, over) {
   if (o.res === 'SL') return 'Stop hit';
   if (o.res === 'T2') return 'Target 2 hit';
   if (o.res === 'T1BE') return 'Half booked at T1, rest out at entry';
-  if (o.res === 'TIME') return 'Time stop exit (60 min)';
+  if (o.res === 'TIME') return 'Time stop exit (' + (t.timeStopMin || CFG.timeStopMin) + ' min)';
   if (o.res === 'T1') return t.v === 2 ? (over ? 'Half booked at T1, rest closed' : 'Target 1 hit, half booked') : 'Target 1 hit';
   const r = tradeR(t, o);
   if (!over) return 'Entered, live';
   const pre = t.sq ? 'Squared off 3:15, ' : 'Closed ';
   return pre + (r > 0 ? 'in profit' : r < 0 ? 'in loss' : 'flat');
 }
-function trackStats(trades, ctx, grade) {
+function trackStats(trades, ctx, grade, slipR) {
+  const slip = Number.isFinite(slipR) ? slipR : 0;
   const L = trades.filter(t => (!grade || t.grade === grade) && isOver(t, ctx));
   let trigN = 0, wins = 0, t1 = 0, sl = 0, dirOK = 0, sumR = 0, sumP = 0;
   for (const t of L) {
@@ -689,7 +780,7 @@ function trackStats(trades, ctx, grade) {
     if ((t.up ? 1 : -1) * (t.last - t.p0) > 0) dirOK++;
     if (!o.trig) continue;
     trigN++;
-    const r = tradeR(t, o);
+    const r = tradeR(t, o) - slip;
     sumR += r; sumP += pnlPct(t, o);
     if (r > 0) wins++;
     if (o.res === 'T1' || o.res === 'T2' || o.res === 'T1BE') t1++;
@@ -729,10 +820,9 @@ function advice(t, o, ind, over) {
   // The trailing stop only ratchets forward: it is based on the best price reached since entry, not on where price is now.
   const bestPx = o.trig ? (t.up ? Math.max(t.dh || c, c) : Math.min(t.dl || c, c)) : c;
   const peakProg = t.t1 !== t.e ? (bestPx - t.e) / (t.t1 - t.e) : 0;
-  let trail = t.sl, trailNote = 'Original stop loss';
+  let trail = t.sl, trailNote = 'Original stop loss (held until T1)';
   if (t.v === 2 && o.res === 'T1') { trail = t.e; trailNote = 'Breakeven on the remaining half'; }
-  else if (o.res === 'T1' || o.res === 'T2' || peakProg >= 1) { trail = t.e + 0.7 * (t.t1 - t.e); trailNote = 'Locks about 70% of the Target 1 profit'; }
-  else if (peakProg >= 0.5) { trail = t.e; trailNote = 'Breakeven (entry price)'; }
+  else if (o.res === 'T1' || o.res === 'T2' || peakProg >= 1) { trail = t.e; trailNote = 'Breakeven after Target 1'; }
   const f2 = x => (Math.round(x * 20) / 20).toFixed(2);
   let action, label, cls, reason;
   if (o.res === 'MISS' || o.res === 'EXP') { action = 'DONE'; label = 'SKIPPED'; cls = 'wait'; reason = o.res === 'MISS' ? 'Price was already too far past Entry. Do not chase.' : 'Entry was not reached within 90 minutes. The signal has expired.'; }
@@ -776,9 +866,9 @@ function mergeTrades(a, b) {
 
 // ---------- state ----------
 const st = {sym:'NIFTY', tf:1, screen:'top_gainers', col:'overview', side:'all', grade:'ab', lev:6, live:true,
-  cap:100000, riskPct:1, delta:0.6, cost:1, maxDay:5, maxOpen:3, lossStops:2, allowB:false, event:false, ban:'', hol:'', snd:false};
-const NUMS = {cap:[1000, 1e9], riskPct:[0.1, 10], delta:[0.1, 1], cost:[0, 20], maxDay:[1, 30], maxOpen:[1, 30], lossStops:[1, 10]};
-const BOOLS = ['allowB', 'event', 'snd'], TEXTS = ['ban', 'hol'];
+  cap:100000, riskPct:1, delta:0.6, cost:1, slipR:0.2, maxDay:5, maxOpen:3, lossStops:2, allowB:false, event:false, secCap:true, mktAlign:false, ban:'', hol:'', snd:false};
+const NUMS = {cap:[1000, 1e9], riskPct:[0.1, 10], delta:[0.1, 1], cost:[0, 20], slipR:[0, 1], maxDay:[1, 5], maxOpen:[1, 5], lossStops:[1, 10]};
+const BOOLS = ['allowB', 'event', 'snd', 'secCap', 'mktAlign'], TEXTS = ['ban', 'hol'];
 try {
   const o = JSON.parse(localStorage.getItem('nse-scan') || '{}');
   if (o && typeof o === 'object') {
@@ -1022,8 +1112,9 @@ function cardHtml(t, ctx) {
     pl = `<div class="fx-pl na"><b>${over ? 'No entry' : 'Waiting'}</b><span>${over ? esc(statusOf(t, o, over)) : (gap > 0 ? gap.toFixed(2) + '% to entry' : 'At entry, needs VWAP side')}</span></div>`;
   }
   const lv = (cls, lab, x) => `<div class="${cls}"><small>${lab}</small><b>${f2(x)}</b></div>`;
-  const strike = v2 ? `${itm(t.p0, t.up)} ${side} <span>(1 ITM, ATM ${atm(t.p0)})</span>` : `${atm(t.p0)} ${side} (ATM)`;
-  const timers = !over && v2 ? (!o.trig ? ` | Expires <b>${hhmm(t.t + CFG.expiryMin * 60000)}</b>` : (!o.res && t.trigAt ? ` | Time stop <b>${hhmm(t.trigAt + CFG.timeStopMin * 60000)}</b>` : '')) : '';
+  const idx = t.isIdx || isIdxSym(t.sym);
+  const strike = idx ? `${otm(t.p0, t.up, t.sym)} ${side} <span>(1 OTM, ATM ${atm(t.p0, t.sym)})</span>` : (v2 ? `${itm(t.p0, t.up)} ${side} <span>(1 ITM, ATM ${atm(t.p0)})</span>` : `${atm(t.p0)} ${side} (ATM)`);
+  const timers = !over && v2 ? (!o.trig ? ` | Expires <b>${hhmm(t.t + CFG.expiryMin * 60000)}</b>` : (!o.res && t.trigAt ? ` | Time stop <b>${hhmm(t.trigAt + (t.timeStopMin || CFG.timeStopMin) * 60000)}</b>` : '')) : '';
   const mfe = v2 && o.trig && Number.isFinite(t.mfe) ? ` | Best <b>${sgn(t.mfe)}R</b> Worst <b>${sgn(t.mae || 0)}R</b>` : '';
   const noteCls = a.cls === 'exit' ? 'd' : a.cls === 'hold' || a.cls === 'book' ? '' : 'n';
   return `<button type="button" class="fc fx ${colour}" data-id="${esc(t.id)}" aria-label="Open ${esc(t.sym)} details">`
@@ -1040,7 +1131,11 @@ function cardHtml(t, ctx) {
 
 function mktHtml(m) {
   if (!m) return '';
-  const b = m.bias > 0 ? '<b class="u">Bullish</b>: CE allowed, PE blocked' : m.bias < 0 ? '<b class="d">Bearish</b>: PE allowed, CE blocked' : '<b>Neutral</b>: CE and PE allowed';
+  const b = m.bias > 0
+    ? '<b class="u">Bullish</b>: ' + (st.mktAlign ? 'CE allowed, PE blocked' : 'CE favoured, counter-trend PE needs A + 1.8x vol')
+    : m.bias < 0
+      ? '<b class="d">Bearish</b>: ' + (st.mktAlign ? 'PE allowed, CE blocked' : 'PE favoured, counter-trend CE needs A + 1.8x vol')
+      : '<b>Neutral</b>: CE and PE allowed';
   const ix = (lab, x) => x ? `<span>${lab} <b class="${x.ch >= 0 ? 'u' : 'd'}">${sgn(x.ch)}%</b>${x.vwap ? (x.c > x.vwap ? ' above' : ' below') + ' VWAP' : ''}</span>` : '';
   return `<b>Market</b> ${b} <span class="mu">(from ${esc(m.src)})</span><div class="mk2">`
     + ix('NIFTY (NIFTYBEES)', m.nifty) + ix('BANK (BANKBEES)', m.bank)
@@ -1058,12 +1153,17 @@ function renderFno(stale) {
   $('#sndChk').checked = st.snd;
   syncSettings();
   const allDay = loadTrades().filter(t => t.date === ctx.sd);
-  const legacy = allDay.filter(t => t.v !== 2), all = allDay.filter(t => t.v === 2);   // signals saved by the old version are kept apart
+  const legacy = allDay.filter(t => t.v !== 2), allV2 = allDay.filter(t => t.v === 2);
+  const idxSigs = allV2.filter(t => t.isIdx || isIdxSym(t.sym));
+  const all = allV2.filter(t => !(t.isIdx || isIdxSym(t.sym)));   // Top 5 F&O stock signals (separate from NIFTY & SENSEX)
   const ob = $('#fnoOld');
   ob.hidden = !legacy.length;
   ob.innerHTML = `<span class="mu">${legacy.length} signal(s) today were locked by the old version (old rules, no daily cap). They are not counted in today's limits.</span> `
     + `<button class="chip sm" id="oldTgl" type="button">${showOld ? 'Hide' : 'Show'} old signals</button>`;
   const mkt = lastData && lastData.mkt, gate = dayGate(all, ctx, mkt);
+  const ib = $('#idxBox');
+  ib.hidden = !idxSigs.length;
+  if (idxSigs.length) $('#idxList').innerHTML = idxSigs.map(t => cardHtml(t, ctx)).join('');
 
   // Square-off warning, market banner, today's limits
   const running = all.filter(t => outcome(t).trig && !isOver(t, ctx));
@@ -1085,7 +1185,8 @@ function renderFno(stale) {
     const o = outcome(t);
     if (isOver(t, ctx)) continue;
     const side = t.up ? 'CE' : 'PE';
-    if (!o.trig) acts.push({p: 2, h: `WATCH <b>${esc(t.sym)} ${itm(t.p0, t.up)} ${side}</b>: enter ${t.up ? 'above' : 'below'} ${f2(t.e)} | ${qtyOf(t)} qty | SL ${f2(t.sl)}`});
+    const stPx = (t.isIdx || isIdxSym(t.sym)) ? otm(t.p0, t.up, t.sym) : itm(t.p0, t.up);
+    if (!o.trig) acts.push({p: 2, h: `WATCH <b>${esc(t.sym)} ${stPx} ${side}</b>: enter ${t.up ? 'above' : 'below'} ${f2(t.e)} | ${qtyOf(t)} qty | SL ${f2(t.sl)}`});
     else {
       const a = advice(t, o, ind[t.sym], false);
       const p = a.action === 'EXIT' ? 0 : a.action === 'BOOK' ? 0 : o.res === 'T1' ? 1 : 1;
@@ -1134,13 +1235,31 @@ async function scanFno(cols, signal) {
   const res = await fetch(SCAN_URL, {
     method: 'POST',
     headers: {'Content-Type': 'text/plain;charset=UTF-8'},
-    body: JSON.stringify({symbols: {tickers: FNO.map(s => 'NSE:' + s.replace(/[-&]/g, '_')).concat(PROXY)}, range: [0, 320], columns: cols}),
+    body: JSON.stringify({symbols: {tickers: FNO.map(s => 'NSE:' + s.replace(/[-&]/g, '_')).concat(PROXY, IDX_TICKERS)}, range: [0, 340], columns: cols}),
     signal
   });
   if (!res.ok) { const er = new Error('HTTP ' + res.status); er.status = res.status; throw er; }
   const j = await res.json();
   if (!j || !Array.isArray(j.data)) throw new Error('Unexpected response');
   return j.data;
+}
+async function scanIdxInd(signal) {
+  try {
+    const res = await fetch(SCAN_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=UTF-8'},
+      body: JSON.stringify({symbols: {tickers: IDX_TICKERS}, columns: IDX_IND_COLS}),
+      signal
+    });
+    if (!res.ok) return {};
+    const j = await res.json(), out = {};
+    for (const x of (j && j.data) || []) {
+      if (!x || !x.d) continue;
+      const s = String(x.s).split(':')[1];
+      out[s] = {adx: x.d[0], ema10: x.d[1], ema20: x.d[2], rsi: x.d[3]};
+    }
+    return out;
+  } catch (e) { return {}; }
 }
 async function loadFno() {
   if (inFlight) return;
@@ -1157,12 +1276,13 @@ async function loadFno() {
       if (e.status >= 400 && e.status < 500) { basic = true; data = await scanFno(COLUMNS, ctl.signal); }
       else throw e;
     }
-    const setups = buildSetups(data), mkt = marketCtx(data);
-    const stocks = data.filter(x => x && !PROXY.includes(x.s));
-    lastData = {setups, mkt, blocked: [], got: stocks.length, at: new Date(), basic};
+    const mkt = marketCtx(data), idxInd = await scanIdxInd(ctl.signal);
+    const setups = buildSetups(data), idxSetups = buildIndexSetups(data, mkt, idxInd, new Date());
+    const stocks = data.filter(x => x && !PROXY.includes(x.s) && !IDX_TICKERS.includes(x.s));
+    lastData = {setups, idxSetups, mkt, blocked: [], got: stocks.length, at: new Date(), basic};
     pushIdx(mkt);
-    stocks.forEach(x => { const s = String(x.s).split(':')[1]; ind[s] = Object.assign(ind[s] || {}, {r5: x.d[6], r15: x.d[5], rd: x.d[4]}, Number.isFinite(x.d[11]) ? {vwap: x.d[11]} : {}); });
-    syncTracker(data, setups, mkt);
+    data.filter(x => x && !PROXY.includes(x.s)).forEach(x => { const s = String(x.s).split(':')[1]; ind[s] = Object.assign(ind[s] || {}, {r5: x.d[6], r15: x.d[5], rd: x.d[4]}, Number.isFinite(x.d[11]) ? {vwap: x.d[11]} : {}); });
+    syncTracker(data, setups, idxSetups, mkt);
     renderFno(false);
     refreshViews();
   } catch (e) {
@@ -1181,7 +1301,7 @@ async function loadFno() {
 }
 
 // Create locked signals (9:30-14:30 IST) within today's limits and rules; update all of the session's trades; finalize after the close.
-function syncTracker(data, setups, mkt) {
+function syncTracker(data, setups, idxSetups, mkt) {
   const ms = marketState(), sd = sessionDate(), now = new Date(), trades = loadTrades(), px = {};
   data.forEach(x => { if (x && x.d && Number.isFinite(x.d[0])) px[String(x.s).split(':')[1]] = {c: x.d[0], h: x.d[2], l: x.d[3], vwap: x.d[11]}; });
   const ctx = {open: ms.open, mins: ms.mins, sd};
@@ -1193,18 +1313,39 @@ function syncTracker(data, setups, mkt) {
     if (p) trackUpdate(t, p.c, p.h, p.l, Number.isFinite(p.vwap) ? p.vwap : (ind[t.sym] || {}).vwap);
     if (finalWindow) { t.fin = true; t.ts = Date.now(); }
   }
-  const today = trades.filter(t => t.date === sd), gate = dayGate(today.filter(t => t.v === 2), ctx, mkt);   // old-version signals do not use up today's limits
-  const filt = filterSetups(setups, mkt, {allowB: st.allowB, aOnly: gate.aOnly, aWhy: gate.aWhy, ban: banSet()});
-  const have = new Set(today.map(t => t.sym));                       // still one signal per stock per day
-  if (lastData) lastData.blocked = filt.blocked.filter(x => !have.has(x.r.sym));
-  if (ms.open && ms.mins >= SIG_START && ms.mins < SIG_END && !gate.stop) {
-    let n = gate.n, active = gate.active;
-    for (const r of filt.ok) {
-      if (n >= Math.min(st.maxDay, MAX_DAY) || active >= st.maxOpen) break;
-      if (have.has(r.sym)) continue;
-      trades.push(makeSignal(r, now)); have.add(r.sym); n++; active++;
+  const today = trades.filter(t => t.date === sd);
+  const todayStocks = today.filter(t => t.v === 2 && !(t.isIdx || isIdxSym(t.sym)));
+  const gate = dayGate(todayStocks, ctx, mkt);   // Top 5 stock limits are separate from NIFTY & SENSEX
+  const activeSectors = new Set(todayStocks.filter(t => !isOver(t, ctx) && t.sector).map(t => t.sector));
+  const filt = filterSetups(setups, mkt, {allowB: st.allowB, aOnly: gate.aOnly, aWhy: gate.aWhy, ban: banSet(), mktAlign: st.mktAlign, secCap: st.secCap, activeSectors});
+  const have = new Set(today.map(t => t.sym));                       // one signal per stock/index per day
+  const blockedNow = filt.blocked.filter(x => !have.has(x.r.sym));
+  if (ms.open && ms.mins >= SIG_START && ms.mins < SIG_END && !isHoliday(sd)) {
+    // 1. Separate NIFTY / SENSEX index signal (max 1 index trade/day to avoid 95% correlation doubling; 1 OTM strike)
+    const hasIdxToday = today.some(t => t.v === 2 && (t.isIdx || isIdxSym(t.sym)));
+    if (!hasIdxToday) {
+      for (const r of (idxSetups || [])) {
+        if (have.has(r.sym)) continue;
+        if (r.grade === 'B' && (!st.allowB || gate.aOnly)) continue;
+        trades.push(makeSignal(r, now)); have.add(r.sym);
+        break;
+      }
+    }
+    // 2. Strictly Top 5 F&O stock signals
+    if (!gate.stop) {
+      let n = gate.n, active = gate.active;
+      for (const r of filt.ok) {
+        if (n >= Math.min(st.maxDay, MAX_DAY) || active >= st.maxOpen) break;
+        if (have.has(r.sym)) continue;
+        if (st.secCap && r.sector && activeSectors.has(r.sector)) {
+          blockedNow.push({r, why: 'sector cap: already active in ' + r.sector});
+          continue;
+        }
+        trades.push(makeSignal(r, now)); have.add(r.sym); if (r.sector) activeSectors.add(r.sector); n++; active++;
+      }
     }
   }
+  if (lastData) lastData.blocked = blockedNow;
   recordSamples(trades, sd);
   saveTrades(trades);
   alertCheck(trades.filter(t => t.date === sd));
@@ -1229,6 +1370,7 @@ function cardClick(e) {
   if (c && c.dataset.id) openDetail(c.dataset.id);
 }
 $('#fnoList').addEventListener('click', cardClick);
+$('#idxList').addEventListener('click', cardClick);
 $('#fnoOld').addEventListener('click', e => { if (e.target.id === 'oldTgl') { showOld = !showOld; renderFno(false); } });
 
 // ---------- Live tab: entered trades, top 5 by profit % ----------
@@ -1291,11 +1433,11 @@ function renderDetail() {
   const row = (lab, price, note, c2) => `<tr><td>${lab}</td><td class="${c2 || ''}"><b>${f2(price)}</b></td><td class="mu">${note}</td></tr>`;
   const items = a.items.length ? a.items.map(x => `<div class="ci"><span class="${x.state > 0 ? 'u' : x.state < 0 ? 'd' : 'mu'}">${x.state > 0 ? '&#10003;' : x.state < 0 ? '&#10007;' : '&#8226;'}</span><span><b>${esc(x.label)}</b> <span class="mu">${esc(x.text)}</span></span></div>`).join('')
     : '<p class="hint" style="margin:0">No live indicator data yet. Keep the page open; readings arrive with the next refresh.</p>';
-  const hs = trackStats(trades, ctx, t.grade);
+  const hs = trackStats(trades, ctx, t.grade, st.slipR);
   const hist = hs.trig >= 10 ? `Grade ${esc(t.grade)} signals on this account reached Target 1 in ${Math.round(hs.t1 / hs.trig * 100)}% of ${hs.trig} entered trades.` : `Not enough history yet (needs 10 entered Grade ${esc(t.grade)} trades, has ${hs.trig}).`;
   body.innerHTML = `<button class="btn x" data-a="close" type="button">Close</button>`
     + `<h2>${esc(t.sym)} <em class="${t.up ? 'u2' : 'd2'}" style="font-style:normal;font-size:13px;padding:2px 10px;border-radius:12px">Buy ${side}</em> <span class="gd ${esc(t.grade)}">Grade ${esc(t.grade)}</span></h2>`
-    + `<p class="hint">Signal locked at ${hhmm(t.t)} IST at ${f2(t.p0)}. Strike about ${atm(t.p0)} ${side} (ATM, approx). ${esc(statusOf(t, o, over))}.</p>`
+    + `<p class="hint">Signal locked at ${hhmm(t.t)} IST at ${f2(t.p0)}. Strike: <b>${(t.isIdx || isIdxSym(t.sym)) ? otm(t.p0, t.up, t.sym) + ' ' + side + ' (1 OTM, ATM ' + atm(t.p0, t.sym) + ')' : itm(t.p0, t.up) + ' ' + side + ' (1 ITM, ATM ' + atm(t.p0) + ')'}</b>. ${esc(statusOf(t, o, over))}.</p>`
     + `<div class="box pad"><div class="mu">${over ? 'Close' : 'Running price'}</div><div class="big">${f2(c)} <span class="mu" style="font-size:14px;font-weight:500">${sgn(mv)}% from signal</span></div>`
     + (o.trig ? `<div class="big ${cls}" style="margin-top:8px">${sgn(lp)}% <span style="font-size:14px;font-weight:600">stock P/L from entry</span></div>`
         + `<div class="mu">Option estimate about ${optPct(lp) >= 0 ? '+' : ''}${optPct(lp)}% (stock % x ${st.lev}) | ${sgn(k * (c - t.e))} per share | ${(t.risk > 0 ? k * (c - t.e) / t.risk : 0).toFixed(2)}R</div>`
@@ -1378,7 +1520,7 @@ async function fastPoll() {
   const syms = [...new Set(loadTrades().filter(t => t.date === ctx.sd && !t.fin).map(t => t.sym))];
   if (!syms.length) return;
   fastFlight = true;
-  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000), tk = syms.map(s => 'NSE:' + s);
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000), tk = syms.map(s => full(s));
   try {
     let cols = Date.now() >= extUntil ? FAST_EXT : FAST_BASIC, data;
     try { data = await quoteReq(tk, cols, ctl.signal); }
@@ -1485,15 +1627,15 @@ function renderTrack() {
   const ctx = getCtx(), trades = loadTrades();
   const pct = (v, n) => n ? v.toFixed(0) + '%' : '-';
   const rowS = (lab, g) => {
-    const s = trackStats(trades, ctx, g);
+    const s = trackStats(trades, ctx, g, st.slipR);
     return `<tr><td>${lab}</td><td>${s.n}</td><td>${s.trig}</td><td>${pct(s.dirAcc, s.n)}</td><td>${pct(s.winRate, s.trig)}</td><td>${s.trig ? (s.avgR >= 0 ? '+' : '') + s.avgR.toFixed(2) + 'R' : '-'}</td></tr>`;
   };
-  $('#trStats').innerHTML = `<table><tr><th>Grade</th><th>Signals</th><th>Entered</th><th>Direction</th><th>Win rate</th><th>Avg</th></tr>${rowS('All', '')}${rowS('A', 'A')}${rowS('B', 'B')}${rowS('C', 'C')}</table>`;
+  $('#trStats').innerHTML = `<table><tr><th>Grade</th><th>Signals</th><th>Entered</th><th>Direction</th><th>Win rate</th><th>Avg (net)</th></tr>${rowS('All', '')}${rowS('A', 'A')}${rowS('B', 'B')}${rowS('C', 'C')}</table>`;
 
   const today = trades.filter(t => t.date === ctx.sd), tb = $('#trToday');
   const doneToday = today.length && today.every(t => isOver(t, ctx));
   if (doneToday) {
-    const s = trackStats(today, ctx, ''), d = new Date(ctx.sd + 'T12:00:00Z').toLocaleDateString('en-IN', {timeZone:'UTC', day:'numeric', month:'short'});
+    const s = trackStats(today, ctx, '', st.slipR), d = new Date(ctx.sd + 'T12:00:00Z').toLocaleDateString('en-IN', {timeZone:'UTC', day:'numeric', month:'short'});
     tb.hidden = false;
     tb.innerHTML = `<b>Result for ${esc(d)} (market closed)</b><div class="kv">`
       + `<span>Signals <b>${s.n}</b></span><span>Entry triggered <b>${s.trig}</b></span><span>Reached Target 1 <b>${s.t1}</b></span><span>Stopped out <b>${s.sl}</b></span>`
@@ -1514,6 +1656,21 @@ function renderTrack() {
       + (o.trig ? ` | stock ${sgn(pp)}%, option about ${optPct(pp) >= 0 ? '+' : ''}${optPct(pp)}%` : '') + '</div></div>';
   }).join('') : '<p class="hint" style="margin:6px 0 0">Nothing recorded yet. Keep the F&amp;O tab open between 9:30 AM and 2:30 PM IST and signals will be locked and logged here.</p>';
 }
+$('#trExport').onclick = () => {
+  const ctx = getCtx(), trades = loadTrades();
+  if (!trades.length) { alert('No signal history to export yet.'); return; }
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const rows = [['Date','Time_IST','Symbol','Side','Grade','Sector','SignalPrice','Entry','Stop','T1','T2','Last','Triggered','Status','GrossR','NetR','StockPnLPct'].join(',')];
+  for (const t of trades) {
+    const o = outcome(t), over = isOver(t, ctx), gr = tradeR(t, o), nr = gr === null ? null : (over ? gr - (st.slipR || 0) : gr), pp = pnlPct(t, o);
+    rows.push([t.date, hhmm(t.t), t.sym, t.up ? 'CE' : 'PE', t.grade, t.sector || '', f2(t.p0), f2(t.e), f2(t.sl), f2(t.t1), f2(t.t2), f2(t.last), o.trig ? 'Yes' : 'No', statusOf(t, o, over), gr === null ? '' : gr.toFixed(2), nr === null ? '' : nr.toFixed(2), pp === null ? '' : pp.toFixed(2)].map(q).join(','));
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([rows.join('\n')], {type: 'text/csv;charset=utf-8'}));
+  a.download = 'stranger-signals-' + istDate() + '.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
 $('#trClear').onclick = () => { if (confirm('Delete all saved signals and results for this account on this device?')) { saveTrades([]); renderTrack(); renderFno(false); } };
 
 // ---------- account + cloud sync (Firebase Auth + Firestore, loaded only when configured) ----------
@@ -1774,7 +1931,7 @@ function perfChart(trades, ctx) {
     if (!isOver(t, ctx)) continue;
     const o = outcome(t), r = tradeR(t, o);
     if (r === null) continue;
-    days[t.date] = (days[t.date] || 0) + r;
+    days[t.date] = (days[t.date] || 0) + (r - (st.slipR || 0));
   }
   let keys = Object.keys(days).sort();
   const n = (RANGES.find(x => x[0] === dRange) || [0, 0])[1];
@@ -1795,7 +1952,7 @@ function perfChart(trades, ctx) {
   return `<div class="pf"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative result ${sgn(cum)}R over ${keys.length} trading days"><defs><linearGradient id="pfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".45"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>`
     + grid + `<path d="${d}L${x(pts.length - 1)} ${y(lo)}L${x(0)} ${y(lo)}Z" fill="url(#pfg)"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" style="filter:drop-shadow(0 0 5px ${col})"/>`
     + `<circle cx="${lx}" cy="${ly}" r="5" fill="#fff" stroke="${col}" stroke-width="3"/><rect x="${Math.min(lx - 34, W - 74)}" y="${Math.max(ly - 32, 0)}" width="64" height="22" rx="6" fill="#0b1626" stroke="${col}"/><text x="${Math.min(lx - 34, W - 74) + 32}" y="${Math.max(ly - 32, 0) + 15}" text-anchor="middle" fill="${col}" font-size="12" font-weight="700">${sgn(cum)}R</text>`
-    + ticks + dots + `</svg></div><p class="hint" style="margin:6px 0 0">Cumulative R of closed trades, ${keys.length} trading day(s). 1R = the risk to the stop. Before costs.</p>`;
+    + ticks + dots + `</svg></div><p class="hint" style="margin:6px 0 0">Cumulative net R of closed trades (after ${(st.slipR || 0).toFixed(2)}R slippage/costs per trade), ${keys.length} trading day(s).</p>`;
 }
 function renderDash() {
   const ctx = getCtx(), trades = loadTrades(), today = trades.filter(t => t.date === ctx.sd);
@@ -1806,7 +1963,7 @@ function renderDash() {
   const entered = today.filter(t => outcome(t).trig).length;
   const hrs = [0, 0, 0, 0, 0, 0];                                       // signals per hour, 9:00 to 14:59
   today.forEach(t => { const hh = +hhmm(t.t).slice(0, 2) - 9; if (hh >= 0 && hh < 6) hrs[hh]++; });
-  const all = trackStats(trades, ctx, '');
+  const all = trackStats(trades, ctx, '', st.slipR);
   let cum = 0; const curve = [0];
   today.filter(t => outcome(t).trig).sort((a, b) => (a.ts || a.t) - (b.ts || b.t)).forEach(t => { curve.push(cum += tradeR(t, outcome(t)) || 0); });
   const netR = gate.netR + today.filter(t => t.v !== 2 && outcome(t).trig).reduce((s, t) => s + (tradeR(t, outcome(t)) || 0), 0);
@@ -1826,7 +1983,7 @@ function renderDash() {
   $('#dPerf').innerHTML = perfChart(trades, ctx);
 
   const done = trades.filter(t => isOver(t, ctx) && outcome(t).trig);
-  const win = done.filter(t => tradeR(t, outcome(t)) > 0).length, lose = done.length - win;
+  const win = done.filter(t => (tradeR(t, outcome(t)) - (st.slipR || 0)) > 0).length, lose = done.length - win;
   $('#dWin').innerHTML = done.length
     ? `<div class="wr">${ring(win / done.length * 100, 150, '#3ccf91', (win / done.length * 100).toFixed(1) + '%', done.length + ' trades')}<ul><li><i style="background:#3ccf91"></i><span>Winning<b>${win}</b></span></li><li><i style="background:#ff6b6b"></i><span>Losing<b>${lose}</b></span></li></ul></div><p class="hint" style="margin:0;text-align:center">Closed trades that entered, all time on this account</p>`
     : '<p class="empty">The win rate appears after the first entered trades close.</p>';
