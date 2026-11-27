@@ -149,6 +149,7 @@ th{color:var(--mu);font-weight:600;font-size:12px}
   <div class="box pad" id="fnoMkt" hidden></div>
   <div class="box pad" id="fnoDay" hidden></div>
   <div class="box pad actl" id="fnoAct" hidden></div>
+  <div class="box pad" id="fnoOld" hidden></div>
   <div class="row" id="fnoFilter" aria-label="Side filter"></div>
   <div class="row" id="fnoGrade" aria-label="Grade filter"></div>
   <div class="set">
@@ -874,6 +875,7 @@ function mktHtml(m) {
     + (m.breadth !== null ? `<span>F&amp;O breadth <b>${m.breadth.toFixed(0)}%</b> up</span>` : '') + '</div>';
 }
 
+let showOld = false;
 function renderFno(stale) {
   const ctx = getCtx();
   chips($('#fnoFilter'), SIDES, s => s[1] === st.side, s => { st.side = s[1]; save(); renderFno(stale); });
@@ -882,7 +884,12 @@ function renderFno(stale) {
   $('#liveChk').checked = st.live;
   $('#sndChk').checked = st.snd;
   syncSettings();
-  const all = loadTrades().filter(t => t.date === ctx.sd);
+  const allDay = loadTrades().filter(t => t.date === ctx.sd);
+  const legacy = allDay.filter(t => t.v !== 2), all = allDay.filter(t => t.v === 2);   // signals saved by the old version are kept apart
+  const ob = $('#fnoOld');
+  ob.hidden = !legacy.length;
+  ob.innerHTML = `<span class="mu">${legacy.length} signal(s) today were locked by the old version (old rules, no daily cap). They are not counted in today's limits.</span> `
+    + `<button class="chip sm" id="oldTgl" type="button">${showOld ? 'Hide' : 'Show'} old signals</button>`;
   const mkt = lastData && lastData.mkt, gate = dayGate(all, ctx, mkt);
 
   // Square-off warning, market banner, today's limits
@@ -920,7 +927,7 @@ function renderFno(stale) {
   // Cards: things needing action first, then running, waiting, finished
   const order = {A: 0, B: 1, C: 2};
   const pri = t => { const o = outcome(t); if (isOver(t, ctx)) return 3; if (!o.trig) return 2; const a = advice(t, o, ind[t.sym], false); return a.action === 'EXIT' || a.action === 'BOOK' ? 0 : 1; };
-  const list = all.filter(t => (st.side === 'all' || (st.side === 'ce') === t.up) && (st.grade === 'all' || t.grade !== 'C'))
+  const list = (showOld ? allDay : all).filter(t => (st.side === 'all' || (st.side === 'ce') === t.up) && (st.grade === 'all' || t.grade !== 'C'))
                   .map(t => ({t, p: pri(t)}))
                   .sort((a, b) => a.p - b.p || order[a.t.grade] - order[b.t.grade] || a.t.t - b.t.t).map(x => x.t);
   const msg = $('#fnoMsg');
@@ -1012,12 +1019,12 @@ function syncTracker(data, setups, mkt) {
     if (p) trackUpdate(t, p.c, p.h, p.l, Number.isFinite(p.vwap) ? p.vwap : (ind[t.sym] || {}).vwap);
     if (finalWindow) { t.fin = true; t.ts = Date.now(); }
   }
-  const today = trades.filter(t => t.date === sd), gate = dayGate(today, ctx, mkt);
+  const today = trades.filter(t => t.date === sd), gate = dayGate(today.filter(t => t.v === 2), ctx, mkt);   // old-version signals do not use up today's limits
   const filt = filterSetups(setups, mkt, {allowB: st.allowB, aOnly: gate.aOnly, aWhy: gate.aWhy, ban: banSet()});
-  const have = new Set(today.map(t => t.sym));
+  const have = new Set(today.map(t => t.sym));                       // still one signal per stock per day
   if (lastData) lastData.blocked = filt.blocked.filter(x => !have.has(x.r.sym));
   if (ms.open && ms.mins >= SIG_START && ms.mins < SIG_END && !gate.stop) {
-    let n = today.length, active = gate.active;
+    let n = gate.n, active = gate.active;
     for (const r of filt.ok) {
       if (n >= Math.min(st.maxDay, MAX_DAY) || active >= st.maxOpen) break;
       if (have.has(r.sym)) continue;
@@ -1047,6 +1054,7 @@ function cardClick(e) {
   if (c && c.dataset.id) openDetail(c.dataset.id);
 }
 $('#fnoList').addEventListener('click', cardClick);
+$('#fnoOld').addEventListener('click', e => { if (e.target.id === 'oldTgl') { showOld = !showOld; renderFno(false); } });
 
 // ---------- Live tab: entered trades, top 5 by profit % ----------
 let runAll = false;
