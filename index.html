@@ -111,6 +111,50 @@ th{color:var(--mu);font-weight:600;font-size:12px}
 .sqw{border-color:var(--dn);color:var(--dn);font-weight:700;animation:fl 1s steps(2) infinite}
 @keyframes fl{50%{opacity:.45}}
 @media(prefers-reduced-motion:reduce){.sqw{animation:none}}
+/* F&O performance cards */
+.fxh{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(135deg,#132131,#0f1a27);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:4px 0 10px}
+.fxh svg{width:34px;height:34px;flex:none}
+.fxh .tt b{display:block;font-size:16px}.fxh .tt span{font-size:12px;color:var(--mu)}
+.seg{display:flex;gap:6px;margin-left:auto;padding:0;overflow:visible}
+.seg .chip{border-radius:10px;padding:7px 16px;background:#101b28;font-weight:600}
+.seg .chip:nth-child(2){color:var(--up)}.seg .chip:nth-child(3){color:var(--dn)}
+.seg .chip.on{background:#14304f;border-color:#3d7bd9;color:#fff}
+.fx{--gc:#3ccf91;position:relative;padding:14px 14px 10px;border-radius:16px;border:1px solid color-mix(in srgb,var(--gc) 55%,transparent);
+  background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--gc) 16%,transparent),transparent 55%),linear-gradient(160deg,#142233,#0d1724);
+  box-shadow:0 0 0 1px rgba(255,255,255,.02) inset,0 0 18px -6px color-mix(in srgb,var(--gc) 70%,transparent);margin-bottom:12px}
+.fx:hover{border-color:var(--gc)}
+.fx.c-book{--gc:#3d7bd9}.fx.c-exit{--gc:#ff6b6b}.fx.c-wait{--gc:#9b6bff}.fx.c-done{--gc:#5b6b7d}
+.fx-top{display:flex;gap:12px;align-items:flex-start}
+.fx-logo{width:48px;height:48px;flex:none;border-radius:12px;background:#f4f6f8;display:grid;place-items:center;font-weight:900;font-size:17px;letter-spacing:-.5px;color:hsl(var(--h) 70% 32%)}
+.fx-main{flex:1;min-width:0}
+.fx-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fx-title>b{font-size:19px;letter-spacing:.3px}
+.fx-gr{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;border:1.5px solid var(--mu);color:var(--mu)}
+.fx-gr.A{border-color:var(--up);color:var(--up)}.fx-gr.B{border-color:var(--ac);color:var(--ac)}
+.fx-side{font-size:12px;font-weight:800;padding:2px 10px;border-radius:8px}
+.fx-side.ce{background:var(--up);color:#04201c}.fx-side.pe{background:var(--dn);color:#2a0707}
+.fx-title .act{border-radius:8px}
+.fx-lv{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px 10px;margin-top:8px}
+.fx-lv small{display:block;font-size:12px;color:var(--mu)}.fx-lv b{font-size:15px}
+.fx-lv .s b,.fx-lv .s small{color:var(--dn)}.fx-lv .t b,.fx-lv .t small{color:var(--up)}
+.fx-pl{flex:none;min-width:150px;padding:10px 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--gc) 50%,transparent);background:color-mix(in srgb,var(--gc) 9%,#0d1724);transform:skewX(-6deg)}
+.fx-pl>*{transform:skewX(6deg);display:block}
+.fx-pl b{font-size:24px;line-height:1.1}.fx-pl span{font-size:13px;color:#c9d6e3;margin-top:4px}
+.fx-pl.up b{color:var(--up)}.fx-pl.dn b{color:var(--dn)}.fx-pl.na b{color:var(--mu);font-size:18px}
+.fx-bar{position:relative;height:6px;margin:44px 10px 16px;border-radius:3px;background:linear-gradient(90deg,#ff6b6b,#3d7bd9 35%,#3ccf91 75%,#3ccf91)}
+.fx-bar .m{position:absolute;top:50%;transform:translate(-50%,-50%)}
+.fx-bar .m i{display:block;width:11px;height:11px;transform:rotate(45deg);background:var(--c);box-shadow:0 0 8px var(--c)}
+.fx-bar .m.e i{transform:none;border-radius:50%;width:12px;height:12px}
+.fx-bar .m s{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);text-decoration:none;white-space:nowrap;font-size:11px;line-height:1.15;text-align:center;padding:2px 6px;border-radius:6px;background:color-mix(in srgb,var(--c) 22%,#0d1724);color:#e8edf2}
+.fx-bar .m s em{display:block;font-style:normal;color:var(--c);font-weight:700}
+.fx-bar .now{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #3d7bd9;transform:translate(-50%,-50%);box-shadow:0 0 10px #8fc0ff;z-index:2}
+.fx-note{display:flex;gap:8px;align-items:flex-start;font-size:13.5px}
+.fx-note i{flex:none;width:18px;height:18px;border-radius:50%;background:var(--up);color:#04201c;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:900;margin-top:1px}
+.fx-note.d i{background:var(--dn);color:#2a0707}.fx-note.n i{background:var(--mu)}
+.fx-sub{font-size:12.5px;color:var(--mu);margin:3px 0 0 26px}
+.fx-meta{font-size:12.5px;color:var(--mu);margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)}
+.fx-meta b{color:var(--tx)}
+@media(max-width:560px){.fx-top{flex-wrap:wrap}.fx-pl{order:3;width:100%;transform:none}.fx-pl>*{transform:none}.fx-lv{grid-template-columns:repeat(3,minmax(0,1fr))}.seg{margin-left:0;width:100%}.seg .chip{flex:1}}
 </style>
 </head>
 <body>
@@ -150,7 +194,11 @@ th{color:var(--mu);font-weight:600;font-size:12px}
   <div class="box pad" id="fnoDay" hidden></div>
   <div class="box pad actl" id="fnoAct" hidden></div>
   <div class="box pad" id="fnoOld" hidden></div>
-  <div class="row" id="fnoFilter" aria-label="Side filter"></div>
+  <div class="fxh">
+    <svg viewBox="0 0 34 34" aria-hidden="true"><rect x="3" y="20" width="5" height="10" rx="1.5" fill="#3ccf91"/><rect x="11" y="14" width="5" height="16" rx="1.5" fill="#3ccf91"/><rect x="19" y="9" width="5" height="21" rx="1.5" fill="#3ccf91"/><path d="M4 15 13 8l6 4 11-9" fill="none" stroke="#3ccf91" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="tt"><b>Strategy Performance</b><span>Locked signals &middot; live tracking</span></div>
+    <div class="row seg" id="fnoFilter" aria-label="Side filter"></div>
+  </div>
   <div class="row" id="fnoGrade" aria-label="Grade filter"></div>
   <div class="set">
     <label for="lev">Option leverage assumed</label>
@@ -265,7 +313,7 @@ const LIST = ['NIFTY','BANKNIFTY','SENSEX','RELIANCE','HDFCBANK','ICICIBANK','SB
 const SCREENS = [['Gainers','top_gainers'],['Volume','volume_leaders'],['Volatile','most_volatile'],['Losers','top_losers'],['Large caps','most_capitalized']];
 const COLS = [['Overview','overview'],['Performance','performance'],['Moving avg','moving_averages'],['Oscillators','oscillators']];
 const TFS = [['5 min','5m','5'],['15 min','15m','15'],['1 hour','1h','60'],['Daily','1D','D']];
-const SIDES = [['All','all'],['Buy CE','ce'],['Buy PE','pe']];
+const SIDES = [['All','all'],['\u25B2 CE','ce'],['\u25BC PE','pe']];
 const GRADES = [['A + B','ab'],['All grades','all']];
 // Update this list when NSE changes the F&O stock universe.
 const FNO = ['360ONE','ABB','ABCAPITAL','ADANIENSOL','ADANIENT','ADANIGREEN','ADANIPORTS','ADANIPOWER','ALKEM','AMBER','AMBUJACEM','ANANDRATHI','ANGELONE','APLAPOLLO','APOLLOHOSP','ASHOKLEY','ASIANPAINT','ASTRAL','ATHERENERG','AUBANK','AUROPHARMA','AXISBANK','BAJAJ-AUTO','BAJAJFINSV','BAJFINANCE','BANDHANBNK','BANKBARODA','BANKINDIA','BDL','BEL','BHARATFORG','BHARTIARTL','BHEL','BIOCON','BLUESTARCO','BOSCHLTD','BPCL','BRITANNIA','BSE','CAMS','CANBK','CDSL','CGPOWER','CHOLAFIN','CIPLA','COALINDIA','COCHINSHIP','COFORGE','COLPAL','CONCOR','CROMPTON','CUMMINSIND','DABUR','DELHIVERY','DIVISLAB','DIXON','DLF','DMART','DRREDDY','EICHERMOT','ENRIN','ETERNAL','FEDERALBNK','FORCEMOT','FORTIS','GAIL','GLENMARK','GMRAIRPORT','GODFRYPHLP','GODREJCP','GODREJPROP','GRASIM','GVT&D','HAL','HAVELLS','HCLTECH','HDFCAMC','HDFCBANK','HDFCLIFE','HEROMOTOCO','HINDALCO','HINDPETRO','HINDUNILVR','HINDZINC','HYUNDAI','ICICIBANK','ICICIGI','ICICIPRULI','IDEA','IDFCFIRSTB','INDHOTEL','INDIANB','INDIGO','INDUSINDBK','INDUSTOWER','INFY','INOXWIND','IOC','IRFC','ITC','JINDALSTEL','JIOFIN','JSWENERGY','JSWSTEEL','JUBLFOOD','KALYANKJIL','KAYNES','KEI','KFINTECH','KOTAKBANK','KPITTECH','LAURUSLABS','LICHSGFIN','LICI','LODHA','LT','LTF','LTM','LUPIN','M&M','MAHABANK','MANAPPURAM','MANKIND','MARICO','MARUTI','MAXHEALTH','MAZDOCK','MCX','MFSL','MOTHERSON','MOTILALOFS','MPHASIS','MUTHOOTFIN','NAM-INDIA','NATIONALUM','NAUKRI','NBCC','NESTLEIND','NHPC','NMDC','NTPC','NYKAA','OBEROIRLTY','OFSS','OIL','ONGC','PAGEIND','PATANJALI','PAYTM','PERSISTENT','PETRONET','PFC','PGEL','PHOENIXLTD','PIDILITIND','PIIND','PNB','PNBHOUSING','POLICYBZR','POLYCAB','POWERGRID','POWERINDIA','PREMIERENE','PRESTIGE','RADICO','RBLBANK','RECLTD','RELIANCE','RVNL','SAGILITY','SAIL','SBICARD','SBILIFE','SBIN','SHREECEM','SHRIRAMFIN','SIEMENS','SOLARINDS','SONACOMS','SRF','SUNPHARMA','SUPREMEIND','SUZLON','SWIGGY','TATACONSUM','TATAELXSI','TATAPOWER','TATASTEEL','TCS','TECHM','TIINDIA','TITAN','TMPV','TORNTPHARM','TRENT','TVSMOTOR','UJJIVANSFB','ULTRACEMCO','UNIONBANK','UNITDSPR','UNOMINDA','UPL','VBL','VEDL','VMM','VOLTAS','WAAREEENER','WIPRO','YESBANK','ZYDUSLIFE','COROMANDEL','CUB','DATAPATTNS','KARURVYSYA','NAVINFLUOR','SYRMA'];
@@ -836,33 +884,46 @@ function dayGate(today, ctx, mkt) {
   return {stop, aOnly: why.length > 0, aWhy: why.join(', ') + ': A only', stops, netR, closedR, entered, active, t1, n: today.length};
 }
 
+const hueOf = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
+const mono = s => { const w = String(s).replace(/[^A-Z0-9]/g, ''); return (w.length <= 3 ? w : w.slice(0, 2)) || '?'; };
+// Level bar: SL, Entry, T1, T2 tags with the running price as a dot. Profit direction is always to the right.
+function levelBar2(t) {
+  const k = t.up ? 1 : -1, c = t.last, vals = [t.sl, t.e, t.t1, t.t2, c], lo = Math.min(...vals), hi = Math.max(...vals), span = (hi - lo) || 1;
+  const pos = x => Math.max(0, Math.min(100, (k > 0 ? (x - lo) : (hi - x)) / span * 100));
+  const mk = (x, lab, col, cls) => `<span class="m ${cls || ''}" style="left:${pos(x)}%;--c:${col}"><s><em>${lab}</em>${f2(x)}</s><i></i></span>`;
+  return `<div class="fx-bar" aria-hidden="true">${mk(t.sl, 'SL', '#ff6b6b')}${mk(t.e, 'Entry', '#3d7bd9', 'e')}${mk(t.t1, 'T1', '#3ccf91')}${mk(t.t2, 'T2', '#3ccf91')}<b class="now" style="left:${pos(c)}%"></b></div>`;
+}
 function cardHtml(t, ctx) {
   const o = outcome(t), over = isOver(t, ctx), side = t.up ? 'CE' : 'PE', k = t.up ? 1 : -1, v2 = t.v === 2;
-  const fav = t.up ? '+' : '-', adv = t.up ? '-' : '+';
-  const cell = (cls, lab, price, l1, l2) => `<div class="lvl ${cls}"><small>${lab}</small><b>${f2(price)}</b><span>${l1}</span><span>${l2}</span></div>`;
-  const r = tradeR(t, o), pp = pnlPct(t, o), mv = k * (t.last - t.p0) / t.p0 * 100;
-  const cls = r === null ? 'mu' : r > 0 ? 'u' : r < 0 ? 'd' : 'mu';
-  const res = o.trig ? ` | ${sgn(r)}R | stock ${sgn(pp)}% | option about ${optPct(pp) >= 0 ? '+' : ''}${optPct(pp)}% (net about ${netOpt(pp) >= 0 ? '+' : ''}${netOpt(pp)}% after costs)` : '';
-  const a = o.trig && !over ? advice(t, o, ind[t.sym], over) : null;
-  const sig = (lbl, v) => lbl + ' ' + sigLabel(v);
-  const strike = v2 ? `Strike about ${itm(t.p0, t.up)} ${side} (1 step ITM; ATM ${atm(t.p0)})` : `Strike about ${atm(t.p0)} ${side} (ATM, approx)`;
-  const q = qtyOf(t);
-  const timers = !over && v2 ? (!o.trig ? ` | expires ${hhmm(t.t + CFG.expiryMin * 60000)} if no entry` : (!o.res && t.trigAt ? ` | time stop ${hhmm(t.trigAt + CFG.timeStopMin * 60000)}` : '')) : '';
-  const mfe = v2 && o.trig && Number.isFinite(t.mfe) ? `<div class="mu">Best ${sgn(t.mfe)}R | Worst ${sgn(t.mae || 0)}R (seen while this page was open)</div>` : '';
-  return `<button type="button" class="fc" data-id="${esc(t.id)}" aria-label="Open ${esc(t.sym)} details">`
-    + `<div class="fh"><b>${esc(t.sym)}</b><span class="gd ${esc(t.grade)}">Grade ${esc(t.grade)}</span><span class="mu">Signal ${hhmm(t.t)}</span>${a ? `<span class="act ${a.cls}">${esc(a.label)}</span>` : ''}<em class="${t.up ? 'u2' : 'd2'}" style="margin-left:auto">Buy ${side}</em></div>`
-    + `<div class="mu">${strike} | locked, will not change${timers}</div>`
-    + `<div class="grid4">`
-    + cell('en', 'ENTRY ' + (t.up ? 'above' : 'below'), t.e, 'stock price', v2 ? 'and ' + (t.up ? 'above' : 'below') + ' VWAP' : 'on break of ' + (t.up ? 'high' : 'low'))
-    + cell('sl', 'STOP LOSS', t.sl, `stock ${adv}${t.riskPct.toFixed(2)}%`, `option about -${Math.min(optPct(t.riskPct), 100)}%`)
-    + cell('tp', v2 ? 'TARGET 1 (book half)' : 'TARGET 1', t.t1, `stock ${fav}${t.p1.toFixed(2)}%`, `option about +${optPct(t.p1)}%`)
-    + cell('tp', v2 ? 'TARGET 2 (rest)' : 'TARGET 2', t.t2, `stock ${fav}${t.p2.toFixed(2)}%`, `option about +${optPct(t.p2)}%`)
-    + `</div>`
-    + (v2 ? `<div class="mu">Size: risk ${inr(st.cap * st.riskPct / 100)} &rarr; about <b>${q}</b> qty at delta ${st.delta}. Lots = qty &divide; lot size (check your broker).</div>` : '')
-    + `<div class="mu">Signal price ${f2(t.p0)} | ${over ? (Number.isFinite(t.exitPx) ? 'Exit ' + f2(t.exitPx) + ' | Last' : 'Close') : 'Now'} ${f2(t.last)} (${sgn(mv)}% from signal) | Reward:Risk T1 1:${t.rr1.toFixed(1)}, T2 1:${t.rr2.toFixed(1)}</div>`
-    + `<div class="mu">${sig('5m', t.f)} | ${sig('15m', t.m)} | ${sig('Daily', t.d)} | Vol ${t.rv ? t.rv.toFixed(1) : '-'}x (at signal)${t.sector ? ' | ' + esc(t.sector) : ''}</div>`
-    + mfe
-    + `<div class="st ${cls}"><b>${esc(statusOf(t, o, over))}</b>${res}${o.amb ? ' | Stop and Target 1 both in range, order unknown, scored as loss' : ''}</div></button>`;
+  const r = tradeR(t, o), pp = pnlPct(t, o);
+  const a = advice(t, o, ind[t.sym], over);
+  const live = o.trig && !over;
+  const pct = live ? livePct(t) : pp;                       // running P/L while live, scored result once closed
+  const colour = !o.trig ? (over ? 'c-done' : 'c-wait') : over ? (r > 0 ? '' : r < 0 ? 'c-exit' : 'c-done') : a.cls === 'hold' ? '' : a.cls === 'book' ? 'c-book' : a.cls === 'exit' ? 'c-exit' : '';
+  const badge = live ? `<span class="act ${a.cls}">${esc(a.label)}</span>` : `<span class="act wait">${esc(statusOf(t, o, over).toUpperCase())}</span>`;
+  let pl;
+  if (o.trig) {
+    const op = optPct(pct);
+    pl = `<div class="fx-pl ${pct >= 0 ? 'up' : 'dn'}"><b>${pct >= 0 ? '&#9650;' : '&#9660;'} ${sgn(pct)}%</b><span>Option about ${op >= 0 ? '+' : ''}${op}%${over ? ' | ' + sgn(r) + 'R' : ' | net ' + (netOpt(pct) >= 0 ? '+' : '') + netOpt(pct) + '%'}</span></div>`;
+  } else {
+    const gap = k * (t.e - t.last) / t.last * 100;
+    pl = `<div class="fx-pl na"><b>${over ? 'No entry' : 'Waiting'}</b><span>${over ? esc(statusOf(t, o, over)) : (gap > 0 ? gap.toFixed(2) + '% to entry' : 'At entry, needs VWAP side')}</span></div>`;
+  }
+  const lv = (cls, lab, x) => `<div class="${cls}"><small>${lab}</small><b>${f2(x)}</b></div>`;
+  const strike = v2 ? `${itm(t.p0, t.up)} ${side} <span>(1 ITM, ATM ${atm(t.p0)})</span>` : `${atm(t.p0)} ${side} (ATM)`;
+  const timers = !over && v2 ? (!o.trig ? ` | Expires <b>${hhmm(t.t + CFG.expiryMin * 60000)}</b>` : (!o.res && t.trigAt ? ` | Time stop <b>${hhmm(t.trigAt + CFG.timeStopMin * 60000)}</b>` : '')) : '';
+  const mfe = v2 && o.trig && Number.isFinite(t.mfe) ? ` | Best <b>${sgn(t.mfe)}R</b> Worst <b>${sgn(t.mae || 0)}R</b>` : '';
+  const noteCls = a.cls === 'exit' ? 'd' : a.cls === 'hold' || a.cls === 'book' ? '' : 'n';
+  return `<button type="button" class="fc fx ${colour}" data-id="${esc(t.id)}" aria-label="Open ${esc(t.sym)} details">`
+    + `<div class="fx-top"><div class="fx-logo" style="--h:${hueOf(t.sym)}" aria-hidden="true">${esc(mono(t.sym))}</div>`
+    + `<div class="fx-main"><div class="fx-title"><b>${esc(t.sym)}</b><span class="fx-gr ${esc(t.grade)}" title="Grade ${esc(t.grade)}">${esc(t.grade)}</span><span class="fx-side ${t.up ? 'ce' : 'pe'}">${side}</span>${badge}<span class="mu">${hhmm(t.t)}</span></div>`
+    + `<div class="fx-lv">${lv('', 'Entry', t.e)}${lv('', over ? 'Last' : 'Now', t.last)}${lv('s', 'Stop', t.sl)}${lv('t', 'T1', t.t1)}${lv('t', 'T2', t.t2)}</div></div>`
+    + pl + `</div>`
+    + levelBar2(t)
+    + `<div class="fx-note ${noteCls}"><i>${noteCls === 'd' ? '!' : '&#10003;'}</i><span>${esc(a.reason)}</span></div>`
+    + (live ? `<div class="fx-sub">Confirmations ${a.supportive} of ${a.max} support | Suggested stop ${f2(a.trail)} (${esc(a.trailNote)})</div>` : '')
+    + `<div class="fx-meta">Strike <b>${strike}</b>${v2 ? ` | Qty <b>${qtyOf(t)}</b> (risk ${inr(st.cap * st.riskPct / 100)})` : ''}${timers}${mfe} | ${esc(statusOf(t, o, over))}${o.amb ? ' (stop and T1 both in range, scored as loss)' : ''}${t.sector ? ' | ' + esc(t.sector) : ''}</div>`
+    + `</button>`;
 }
 
 function mktHtml(m) {
